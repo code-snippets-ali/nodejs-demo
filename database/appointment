@@ -5,8 +5,14 @@ const Test = require("./test");
 
 const appointmentSchema = new mongoose.Schema({
     date: Date,
-    doctorId: Number,
-    patientId: Number,
+    doctorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Doctor",
+    },
+    patientId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     medicins: [Medicin],
     tests: [Test],
     diagnosis: [Diagnosis],

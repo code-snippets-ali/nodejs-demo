@@ -3,10 +3,17 @@ const mongoose = require("mongoose");
 const slotSchema = new mongoose.Schema({
     startHour: {
         type: Number,
+        min: 0,
+        max: 23,
     },
-    startMinute: Number,
+    startMinute: {
+        type: Number,
+        min: 0,
+        max: 60,
+    },
+    duration: Number,
 });
 
-const Medicin = mongoose.model("Medicin", medicinSchema);
+const Slot = mongoose.model("Slot", medicinSchema);
 
-module.exports = Medicin;
+module.exports = Slot;

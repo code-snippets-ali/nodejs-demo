@@ -1,18 +1,18 @@
 const mongoose = require("mongoose");
 
 const doctorSchema = new mongoose.Schema({
-    name: {
-        type: String,
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: "User",
     },
-    email: {
-        type: String,
-        required: true,
-        maxlength: 255,
-        unique: true,
-    },
+    houseNumber: String,
+    streetName: String,
+    streetNumber: String,
     specialities: {
         type: [String],
     },
-    isAdmin: Boolean,
 });
+
+const Doctor = mongoose.model("Doctor".doctorSchema);
+module.exports = Doctor;
