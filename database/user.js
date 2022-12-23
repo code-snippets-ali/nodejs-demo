@@ -52,4 +52,4 @@ function validateUser(user) {
 
 exports.User = User;
 exports.validate = validateUser;
-exports.expiresIn = expiresIn;
+exportes.expiresIn = expiresIn;
