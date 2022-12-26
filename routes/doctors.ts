@@ -2,21 +2,23 @@ const { auth } = require("../middleware/auth");
 import express, { Express, Request, Response } from "express";
 const router = express.Router();
 const { DoctorService } = require("../serviceobjects/doctorsService");
-import { IDoctor, DoctorViewModel } from "../ViewModels/DoctorViewModel";
 import { DoctorsService } from "../serviceobjects/doctorsService";
+import { ResultError } from "../serviceobjects/Error";
+const service = new DoctorsService();
 
 router.get("/", (req: Request, res: Response) => {
-    const service = new DoctorsService();
     res.send(service.getAllDoctors());
 });
 
-router.get("/:id", (req: Request, res: Response) => {});
+router.get("/:id", async (req: Request, res: Response) => {});
 
-router.post("/", (req: Request, res: Response) => {
-    const params = req.body;
-    const doctor = new DoctorViewModel(params);
-    doctor.houseNumber = req.body["houseNumber"];
-
-    res.send(doctor);
+router.post("/", async (req: Request, res: Response) => {
+    try {
+        const doctor = await service.createNewDoctor(req.body);
+        res.send(doctor);
+    } catch (error: any) {
+        res.status(error.statusCode).send(error.message);
+    }
+    console.log("doctor returned");
 });
 module.exports = router;
