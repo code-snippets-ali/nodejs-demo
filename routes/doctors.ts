@@ -15,10 +15,10 @@ router.get("/:id", async (req: Request, res: Response) => {});
 router.post("/", async (req: Request, res: Response) => {
     try {
         const doctor = await service.createNewDoctor(req.body);
-        res.send(doctor);
+        console.log("doctor returned: " + doctor);
+        res.status(201).send(doctor);
     } catch (error: any) {
         res.status(error.statusCode).send(error.message);
     }
-    console.log("doctor returned");
 });
 module.exports = router;

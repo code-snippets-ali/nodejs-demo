@@ -16,10 +16,12 @@ class DoctorsService {
         const { error } = this.validateCreate(doctor);
         if (error)
             return Promise.reject(new ResultError(400, "This is bad request"));
-        const createdDoctor: IDoctor = doctor;
-        console.log("Created doctor");
+        const createdDoctor = new Doctor(doctor);
+        await createdDoctor.save();
 
-        return createdDoctor;
+        console.log("Created doctor");
+        const responsDoctor: IDoctor = createdDoctor;
+        return responsDoctor;
     }
     async getAllDoctors(): Promise<String> {
         const doctors = await Doctor.find();
@@ -28,6 +30,7 @@ class DoctorsService {
 
     validateCreate(doctor: IDoctor) {
         const schema = Joi.object({
+            userId: Joi.string().max(500),
             houseNumber: Joi.string().max(500),
             streetName: Joi.string().max(500),
             streetNumber: Joi.string().max(100),
