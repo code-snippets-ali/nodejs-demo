@@ -21,6 +21,7 @@ class DoctorsService {
                 "BAD REQUEST",
                 HttpStatusCode.BAD_REQUEST,
                 "This is a bad request",
+                "This is message for user",
                 true
             );
         }
@@ -37,6 +38,7 @@ class DoctorsService {
                 "Server Error",
                 HttpStatusCode.INTERNAL_SERVER,
                 "Theres is some preblem with service. Please try later",
+                "This is message for user",
                 true
             );
         }

@@ -22,12 +22,14 @@ export class ResultError {
 export class BaseError extends Error {
     public readonly name: string;
     public readonly httpCode: HttpStatusCode;
+    public readonly userMessage: string;
     public readonly isOperational: boolean;
 
     constructor(
         name: string,
         httpCode: HttpStatusCode,
         description: string,
+        userMessage: string,
         isOperational: boolean
     ) {
         super(description);
@@ -35,6 +37,7 @@ export class BaseError extends Error {
 
         this.name = name;
         this.httpCode = httpCode;
+        this.userMessage = userMessage;
         this.isOperational = isOperational;
 
         Error.captureStackTrace(this);
@@ -47,8 +50,9 @@ export class APIError extends BaseError {
         name: string,
         httpCode = HttpStatusCode.INTERNAL_SERVER,
         description = "internal server error",
+        userMessage = "There is some error in service",
         isOperational = true
     ) {
-        super(name, httpCode, description, isOperational);
+        super(name, httpCode, description, userMessage, isOperational);
     }
 }
