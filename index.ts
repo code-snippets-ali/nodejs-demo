@@ -9,6 +9,7 @@ const users = require("./routes/users");
 const auth = require("./routes/authenticate");
 const doctors = require("./routes/doctors");
 const Joi = require("joi");
+const error = require("./middleware/errorhandler");
 
 const app = express();
 
@@ -30,6 +31,8 @@ app.use("/api/courses", courses);
 app.use("/api/users", users);
 app.use("/api/authenticate", auth);
 app.use("/api/doctors", doctors);
+
+app.use(error);
 //Configuration
 // console.log(" Application name: " + config.get("name"));
 // console.log(" Mail Server: " + config.get("mail.host"));

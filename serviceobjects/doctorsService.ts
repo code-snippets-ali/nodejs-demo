@@ -1,5 +1,5 @@
 const Doctor = require("../database/doctor");
-import { ResultError } from "./Error";
+import { ResultError, APIError, HttpStatusCode } from "./Error";
 const Joi = require("joi");
 export interface IDoctor {
     userId: String;
@@ -13,15 +13,33 @@ export interface IDoctor {
 class DoctorsService {
     constructor() {}
     async createNewDoctor(doctor: IDoctor): Promise<IDoctor> {
+        // throw new APIError("BAD REQUEST", 400, "This is a bad request", true);
         const { error } = this.validateCreate(doctor);
-        if (error)
-            return Promise.reject(new ResultError(400, "This is bad request"));
-        const createdDoctor = new Doctor(doctor);
-        await createdDoctor.save();
+        if (error) {
+            console.log("Validation error API Error");
+            throw new APIError(
+                "BAD REQUEST",
+                HttpStatusCode.BAD_REQUEST,
+                "This is a bad request",
+                true
+            );
+        }
 
-        console.log("Created doctor");
-        const responsDoctor: IDoctor = createdDoctor;
-        return responsDoctor;
+        const createdDoctor = new Doctor(doctor);
+        try {
+            await createdDoctor.save();
+            console.log("Created doctor");
+            const responsDoctor: IDoctor = createdDoctor;
+            return responsDoctor;
+        } catch (error: any) {
+            console.log("Creation Error");
+            throw new APIError(
+                "Server Error",
+                HttpStatusCode.INTERNAL_SERVER,
+                "Theres is some preblem with service. Please try later",
+                true
+            );
+        }
     }
     async getAllDoctors(): Promise<String> {
         const doctors = await Doctor.find();
@@ -29,6 +47,7 @@ class DoctorsService {
     }
 
     validateCreate(doctor: IDoctor) {
+        console.log("validation started");
         const schema = Joi.object({
             userId: Joi.string().max(500),
             houseNumber: Joi.string().max(500),
@@ -37,6 +56,7 @@ class DoctorsService {
             city: Joi.string().max(500),
             country: Joi.string().max(500),
         });
+        console.log("validation returned");
         return schema.validate(doctor);
     }
 }
