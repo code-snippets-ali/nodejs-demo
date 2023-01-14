@@ -7,5 +7,5 @@ module.exports = function (
     res: Response,
     next: NextFunction
 ) {
-    res.status(error.httpCode).send(error.userMessage);
+    res.status(error.httpCode).send(error.message);
 };

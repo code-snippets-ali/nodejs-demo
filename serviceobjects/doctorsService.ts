@@ -26,8 +26,10 @@ class DoctorsService {
             );
         }
 
-        const createdDoctor = new Doctor(doctor);
         try {
+            console.log("const createdDoctor = new Doctor(doctor)");
+            const createdDoctor = new Doctor(doctor);
+            console.log("await createdDoctor.save();");
             await createdDoctor.save();
             console.log("Created doctor");
             const responsDoctor: IDoctor = createdDoctor;
@@ -37,7 +39,7 @@ class DoctorsService {
             throw new APIError(
                 "Server Error",
                 HttpStatusCode.INTERNAL_SERVER,
-                "Theres is some preblem with service. Please try later",
+                error.message,
                 "This is message for user",
                 true
             );
@@ -51,7 +53,7 @@ class DoctorsService {
     validateCreate(doctor: IDoctor) {
         console.log("validation started");
         const schema = Joi.object({
-            userId: Joi.string().max(500),
+            userId: Joi.number(),
             houseNumber: Joi.string().max(500),
             streetName: Joi.string().max(500),
             streetNumber: Joi.string().max(100),

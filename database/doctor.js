@@ -6,12 +6,15 @@ const doctorSchema = new mongoose.Schema({
         required: true,
         ref: "User",
     },
-    houseNumber: String,
-    streetName: String,
-    streetNumber: String,
+
     specialities: {
         type: [String],
     },
+    training: String,
+    certification: String,
+    practiceStartDate: Date,
+    education: String,
+    licences: String,
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);
