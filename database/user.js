@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
-const expiresIn = "30s";
+const expiresIn = "3000s";
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
