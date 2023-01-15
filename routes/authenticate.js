@@ -3,6 +3,7 @@ const _ = require("lodash");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const { User, expiresIn } = require("../database/user");
+const { Profile } = require("../database/profile");
 const { refresh } = require("../middleware/auth");
 
 const router = express.Router();
@@ -18,7 +19,13 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hash = await bcrypt.hash(user.password, salt);
     user.password = hash;
+
+    const profile = new Profile({
+        name: user.name,
+    });
+    user.profile = profile;
     await user.save();
+
     const token = user.generateToken();
     const refreshToken = user.generateRefreshToken();
     const Token = {

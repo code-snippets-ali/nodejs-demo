@@ -10,7 +10,9 @@ router.get("/", (req, res) => {
 });
 router.get("/me", auth, async (req, res) => {
     req.user._id;
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user._id)
+        .populate("profile")
+        .select("-password");
     res.send(user);
 });
 router.post("/register", async (req, res) => {
