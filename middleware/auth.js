@@ -22,9 +22,10 @@ function admin(req, res, next) {
 
 function refresh(req, res, next) {
     const refreshToken = req.body.refreshToken;
-    if (!refreshToken) return res.status(400).send("Refresh Toke required");
+    if (!refreshToken) return res.status(400).send("Refresh Token required");
     try {
-        jwt.verify(refreshToken, config.get("jwtPrivateKey"));
+        const decoded = jwt.verify(refreshToken, config.get("jwtPrivateKey"));
+        req.user = decoded;
         next();
     } catch (ex) {
         console.log(ex);

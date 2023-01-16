@@ -1,12 +1,20 @@
-const { User, expiresIn } = require("../database/user");
+const { User } = require("../database/user");
 const { Profile } = require("../database/profile");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 import { ResultError, APIError, HttpStatusCode } from "./Error";
-import { IAuthenticationResponse } from "./authenticationService";
+
 const jwt = require("jsonwebtoken");
 const config = require("config");
 
+const expires_accessToken = "8h";
+const expires_RefreshToken = "30d";
+
+//#region Request Interfaces
+
+export interface IRefreshTokenRequest {
+    _id: String;
+}
 export interface ISignupRequest {
     name: String;
     email: String;
@@ -16,6 +24,11 @@ export interface ISigninRequest {
     email: String;
     password: String;
 }
+
+//#endregion
+
+//#region Response interfaces
+
 export interface IAuthenticationResponse {
     accessToken?: String;
     refreshToken?: String;
@@ -24,8 +37,43 @@ export interface IAuthenticationResponse {
     error?: String;
 }
 
+//#endregion
+
 class AuthenticationService {
     constructor() {}
+
+    async refreshToken(
+        params: IRefreshTokenRequest
+    ): Promise<IAuthenticationResponse> {
+        try {
+            const profile = await Profile.findOne({ _id: params._id });
+
+            if (!profile) {
+                const response: IAuthenticationResponse = {
+                    success: false,
+                    error: "Unable ot refresh token. Please sign in again",
+                };
+                return response;
+            }
+            const response: IAuthenticationResponse = {
+                accessToken: this.generateToken(profile._id, profile.isAdmin),
+                refreshToken: this.generateRefreshToken(profile._id),
+                expiresIn: expires_accessToken,
+                success: true,
+            };
+            return response;
+        } catch (error: any) {
+            console.log("Creation Error");
+            throw new APIError(
+                "Server Error",
+                HttpStatusCode.INTERNAL_SERVER,
+                error.message,
+                "This is message for user",
+                true
+            );
+        }
+    }
+
     async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
         const { error } = this.validateSignin(params);
         if (error) {
@@ -64,7 +112,7 @@ class AuthenticationService {
             const response: IAuthenticationResponse = {
                 accessToken: this.generateToken(user.profile._id, user.isAdmin),
                 refreshToken: this.generateRefreshToken(user.profile._id),
-                expiresIn: expiresIn,
+                expiresIn: expires_accessToken,
                 success: true,
             };
             return response;
@@ -118,7 +166,7 @@ class AuthenticationService {
             const response: IAuthenticationResponse = {
                 accessToken: this.generateToken(profile._id, profile.isAdmin),
                 refreshToken: this.generateRefreshToken(profile._id),
-                expiresIn: expiresIn,
+                expiresIn: expires_accessToken,
                 success: true,
             };
             return response;
@@ -134,11 +182,13 @@ class AuthenticationService {
         }
     }
 
+    //#region Generate Access and Refresh token
+
     generateToken(profileId: String, isAdmin: Boolean): String {
         const token = jwt.sign(
             { _id: profileId, isAdmin: isAdmin },
             config.get("jwtPrivateKey"),
-            { expiresIn: expiresIn }
+            { expiresIn: expires_accessToken }
         );
         return token;
     }
@@ -146,10 +196,15 @@ class AuthenticationService {
     generateRefreshToken(profileId: String): String {
         const refresh_token = jwt.sign(
             { _id: profileId },
-            config.get("jwtPrivateKey")
+            config.get("jwtPrivateKey"),
+            { expiresIn: expires_RefreshToken }
         );
         return refresh_token;
     }
+
+    //#endregion
+
+    //#region validating request
 
     validateCreate(user: ISignupRequest) {
         console.log("validation started");
@@ -171,4 +226,6 @@ class AuthenticationService {
         console.log("validation returned");
         return schema.validate(user);
     }
+
+    //#endregion
 }
