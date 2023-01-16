@@ -5,6 +5,10 @@ const profileSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
     phone: String,
     gender: String,
     houseNumber: String,
@@ -13,6 +17,19 @@ const profileSchema = new mongoose.Schema({
     city: String,
     state: String,
     country: String,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "User",
+    },
+    doctor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Doctor",
+    },
+    patient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Patient",
+    },
 });
 
 const Profile = mongoose.model("Profile", profileSchema);
