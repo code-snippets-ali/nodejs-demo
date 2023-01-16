@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 5,
     },
-    profile: profileSchema,
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
+    },
     isAdmin: Boolean,
 });
 
