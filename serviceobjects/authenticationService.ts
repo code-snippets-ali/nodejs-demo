@@ -10,19 +10,37 @@ const config = require("config");
 const expires_accessToken = "8h";
 const expires_RefreshToken = "30d";
 
+//#region validation Error Messages
+enum Validations {
+    email_invalid = "Please provide a valid email address.",
+    email_required = "Please provide an email to continue.",
+    email_empty = "Email provided is empty. Please provide a valid email address",
+    email_max = "Email address is too long. Please do not provide more than 500 characters.",
+
+    password = "Please proide a password for regietering new account.",
+    password_min = "Please provide atleast 5 characters for your password.",
+    password_max = "Password is too long. Please do not provide more than 500 characters for password.",
+
+    name_required = "Please provide your name to register a new account.",
+    name_min = "Please provide atleast one character for your name",
+    name_max = "Name is too long. Please do not provide more than 500 characters.",
+}
+
+//#endregion
+
 //#region Request Interfaces
 
 export interface IRefreshTokenRequest {
-    _id: String;
+    _id: string;
 }
 export interface ISignupRequest {
-    name: String;
-    email: String;
-    password: String;
+    name: string;
+    email: string;
+    password: string;
 }
 export interface ISigninRequest {
-    email: String;
-    password: String;
+    email: string;
+    password: string;
 }
 
 //#endregion
@@ -30,16 +48,16 @@ export interface ISigninRequest {
 //#region Response interfaces
 
 export interface IAuthenticationResponse {
-    accessToken?: String;
+    accessToken?: string;
     refreshToken?: String;
     expiresIn?: String;
-    success: Boolean;
-    error?: String;
+    success: boolean;
+    error?: string;
 }
 
 //#endregion
 
-class AuthenticationService {
+export class AuthenticationService {
     constructor() {}
 
     async refreshToken(
@@ -75,20 +93,9 @@ class AuthenticationService {
     }
 
     async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
-        const { error } = this.validateSignin(params);
-        if (error) {
-            console.log("Validation error API Error");
-            throw new APIError(
-                "BAD REQUEST",
-                HttpStatusCode.BAD_REQUEST,
-                "This is a bad request",
-                "This is message for user",
-                true
-            );
-        }
         try {
             let user = await User.findOne({ email: params.email }).populate(
-                "Profile"
+                "profile"
             );
 
             if (!user) {
@@ -132,26 +139,24 @@ class AuthenticationService {
         params: ISignupRequest
     ): Promise<IAuthenticationResponse> {
         // throw new APIError("BAD REQUEST", 400, "This is a bad request", true);
-        const { error } = this.validateCreate(params);
-        if (error) {
-            console.log("Validation error API Error");
-            throw new APIError(
-                "BAD REQUEST",
-                HttpStatusCode.BAD_REQUEST,
-                "This is a bad request",
-                "This is message for user",
-                true
-            );
-        }
 
         try {
+            const existingUser = await User.findOne({ email: params.email });
+            if (existingUser) {
+                const response: IAuthenticationResponse = {
+                    error: "User already exist. Please sign in",
+                    success: false,
+                };
+                return response;
+            }
+
             const salt = await bcrypt.genSalt(12);
             const hash = await bcrypt.hash(params.password, salt);
 
             const user = new User({
                 name: params.name,
                 email: params.email,
-                pasword: hash,
+                password: hash,
             });
 
             const profile = new Profile({
@@ -184,7 +189,7 @@ class AuthenticationService {
 
     //#region Generate Access and Refresh token
 
-    generateToken(profileId: String, isAdmin: Boolean): String {
+    generateToken(profileId: String, isAdmin: Boolean): string {
         const token = jwt.sign(
             { _id: profileId, isAdmin: isAdmin },
             config.get("jwtPrivateKey"),
@@ -193,7 +198,7 @@ class AuthenticationService {
         return token;
     }
 
-    generateRefreshToken(profileId: String): String {
+    generateRefreshToken(profileId: String): string {
         const refresh_token = jwt.sign(
             { _id: profileId },
             config.get("jwtPrivateKey"),
@@ -206,26 +211,74 @@ class AuthenticationService {
 
     //#region validating request
 
-    validateCreate(user: ISignupRequest) {
+    validateCreate(req: any): any {
         console.log("validation started");
         const schema = Joi.object({
-            name: Joi.string().max(500),
-            email: Joi.string().max(500),
-            password: Joi.string().max(200),
+            name: Joi.string()
+                .min(1)
+                .max(500)
+                .required()
+                .messages(this.nameValidationMessages()),
+            email: Joi.string()
+                .email()
+                .min(1)
+                .max(500)
+                .required()
+                .messages(this.emailValidationMesages()),
+            password: Joi.string()
+                .min(5)
+                .max(200)
+                .required()
+                .messages(this.passwordValidationMessages()),
         });
         console.log("validation returned");
-        return schema.validate(user);
+        return schema.validate(req);
     }
 
-    validateSignin(user: ISigninRequest) {
+    validateSignin(req: any) {
         console.log("validation started");
         const schema = Joi.object({
-            email: Joi.string().max(500),
-            password: Joi.string().max(200),
+            email: Joi.string()
+                .max(500)
+                .required()
+                .messages(this.emailValidationMesages()),
+            password: Joi.string()
+                .max(200)
+                .required(this.passwordValidationMessages()),
         });
         console.log("validation returned");
-        return schema.validate(user);
+        return schema.validate(req);
     }
 
     //#endregion
+
+    //#region validations messages
+
+    emailValidationMesages(): any {
+        return {
+            "any.required": Validations.email_required,
+            "string.empty": Validations.email_empty,
+            "string.min": Validations.email_empty,
+            "string.max": Validations.email_max,
+            "string.email": Validations.email_invalid,
+        };
+    }
+
+    nameValidationMessages(): any {
+        return {
+            "any.required": Validations.name_required,
+            "string.empty": Validations.name_min,
+            "string.min": Validations.name_min,
+            "string.max": Validations.name_max,
+        };
+    }
+
+    passwordValidationMessages(): any {
+        return {
+            "any.required": Validations.password,
+            "string.empty": Validations.password_min,
+            "string.min": Validations.password_min,
+            "string.max": Validations.password_max,
+        };
+    }
 }
