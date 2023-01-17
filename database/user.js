@@ -3,28 +3,31 @@ const { profileSchema } = require("./profile");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
+const { DBConstants } = require("./DBConstants");
 const expiresIn = "3000s";
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
+        minlength: DBConstants.NameMinLength,
+        maxlength: DBConstants.NameMaxLength,
     },
     email: {
         type: String,
         required: true,
-        maxlength: 255,
+        maxlength: DBConstants.EmailMaxLength,
         unique: true,
     },
     password: {
         type: String,
         required: true,
-        minlength: 5,
+        minlength: DBConstants.PasswordMinLength,
+        maxlength: DBConstants.PasswordMaxLength,
     },
     profile: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Profile",
     },
-    isAdmin: Boolean,
 });
 
 userSchema.methods.generateToken = function () {

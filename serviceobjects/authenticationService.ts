@@ -2,7 +2,10 @@ const { User } = require("../database/user");
 const { Profile } = require("../database/profile");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
+import { DBConstants } from "../database/DBConstants";
+
 import { ResultError, APIError, HttpStatusCode } from "./Error";
+import Messages from "./Utilities/Messages";
 
 const jwt = require("jsonwebtoken");
 const config = require("config");
@@ -69,7 +72,7 @@ export class AuthenticationService {
             if (!profile) {
                 const response: IAuthenticationResponse = {
                     success: false,
-                    error: "Unable ot refresh token. Please sign in again",
+                    error: "Unable to refresh token. Please sign in again",
                 };
                 return response;
             }
@@ -215,70 +218,45 @@ export class AuthenticationService {
         console.log("validation started");
         const schema = Joi.object({
             name: Joi.string()
-                .min(1)
-                .max(500)
+                .min(DBConstants.NameMinLength)
+                .max(DBConstants.NameMaxLength)
                 .required()
-                .messages(this.nameValidationMessages()),
+                .messages(Messages.nameValidationMessages()),
             email: Joi.string()
                 .email()
-                .min(1)
-                .max(500)
+                .min(DBConstants.EmailMinLength)
+                .max(DBConstants.EmailMaxLength)
                 .required()
-                .messages(this.emailValidationMesages()),
+                .messages(Messages.emailValidationMesages()),
             password: Joi.string()
-                .min(5)
-                .max(200)
+                .min(DBConstants.PasswordMinLength)
+                .max(DBConstants.PasswordMaxLength)
                 .required()
-                .messages(this.passwordValidationMessages()),
+                .messages(Messages.passwordValidationMessages()),
         });
         console.log("validation returned");
         return schema.validate(req);
     }
 
     validateSignin(req: any) {
-        console.log("validation started");
+        console.log("validation started", req);
         const schema = Joi.object({
             email: Joi.string()
-                .max(500)
+                .email()
+                .max(DBConstants.EmailMaxLength)
+                .min(DBConstants.EmailMinLength)
                 .required()
-                .messages(this.emailValidationMesages()),
+                .messages(Messages.emailValidationMesages()),
+
             password: Joi.string()
-                .max(200)
-                .required(this.passwordValidationMessages()),
+                .min(DBConstants.PasswordMinLength)
+                .max(DBConstants.PasswordMaxLength)
+                .required(Messages.passwordValidationMessages())
+                .messages(Messages.passwordValidationMessages()),
         });
         console.log("validation returned");
         return schema.validate(req);
     }
 
     //#endregion
-
-    //#region validations messages
-
-    emailValidationMesages(): any {
-        return {
-            "any.required": Validations.email_required,
-            "string.empty": Validations.email_empty,
-            "string.min": Validations.email_empty,
-            "string.max": Validations.email_max,
-            "string.email": Validations.email_invalid,
-        };
-    }
-
-    nameValidationMessages(): any {
-        return {
-            "any.required": Validations.name_required,
-            "string.empty": Validations.name_min,
-            "string.min": Validations.name_min,
-            "string.max": Validations.name_max,
-        };
-    }
-
-    passwordValidationMessages(): any {
-        return {
-            "any.required": Validations.password,
-            "string.empty": Validations.password_min,
-            "string.min": Validations.password_min,
-            "string.max": Validations.password_max,
-        };
-    }
 }
