@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { profileSchema } = require("./profile");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
@@ -18,6 +19,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 5,
+    },
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
     },
     isAdmin: Boolean,
 });
@@ -51,5 +56,6 @@ function validateUser(user) {
 }
 
 exports.User = User;
+exports.userSchema = userSchema;
 exports.validate = validateUser;
 exports.expiresIn = expiresIn;

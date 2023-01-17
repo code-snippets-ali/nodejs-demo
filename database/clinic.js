@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-
-const doctorOfficeSchema = new mongoose.Schema({
+const { Doctor, doctorSchema } = require("./doctor.js");
+const clinicSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -13,4 +13,5 @@ const doctorOfficeSchema = new mongoose.Schema({
     city: String,
     state: String,
     country: String,
+    doctors: [doctorSchema],
 });

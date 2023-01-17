@@ -8,9 +8,11 @@ const shiftSchema = new mongoose.Schema({
     },
     startTime: {
         type: Date,
+        required: true,
     },
     endTime: {
         type: Date,
+        required: true,
     },
     slots: [Slot],
 });
