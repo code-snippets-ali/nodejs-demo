@@ -6,6 +6,7 @@ import { DBConstants } from "../database/DBConstants";
 
 import { ResultError, APIError, HttpStatusCode } from "./Error";
 import Messages from "./Utilities/Messages";
+import { IResponse } from "./Interfaces/IResponse";
 
 const jwt = require("jsonwebtoken");
 const config = require("config");
@@ -50,12 +51,10 @@ export interface ISigninRequest {
 
 //#region Response interfaces
 
-export interface IAuthenticationResponse {
+export interface IAuthenticationResponse extends IResponse {
     accessToken?: string;
     refreshToken?: String;
     expiresIn?: String;
-    success: boolean;
-    error?: string;
 }
 
 //#endregion
@@ -72,7 +71,8 @@ export class AuthenticationService {
             if (!profile) {
                 const response: IAuthenticationResponse = {
                     success: false,
-                    error: "Unable to refresh token. Please sign in again",
+                    message: "Unable to refresh token. Please sign in again",
+                    statusCode: HttpStatusCode.BAD_REQUEST,
                 };
                 return response;
             }
@@ -81,6 +81,7 @@ export class AuthenticationService {
                 refreshToken: this.generateRefreshToken(profile._id),
                 expiresIn: expires_accessToken,
                 success: true,
+                statusCode: HttpStatusCode.OK,
             };
             return response;
         } catch (error: any) {
@@ -96,6 +97,15 @@ export class AuthenticationService {
     }
 
     async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
+        const { error } = this.validateSignin(params);
+        if (error) {
+            return {
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                message: error.details[0].message,
+            };
+        }
+
         try {
             let user = await User.findOne({ email: params.email }).populate(
                 "profile"
@@ -104,7 +114,8 @@ export class AuthenticationService {
             if (!user) {
                 const response: IAuthenticationResponse = {
                     success: false,
-                    error: "There is no user with this email id",
+                    message: "There is no user with this email id",
+                    statusCode: HttpStatusCode.NOT_FOUND,
                 };
                 return response;
             }
@@ -115,7 +126,8 @@ export class AuthenticationService {
             if (!isValidPassword) {
                 const response: IAuthenticationResponse = {
                     success: false,
-                    error: "This is incorrect password",
+                    message: "This is incorrect password",
+                    statusCode: HttpStatusCode.BAD_REQUEST,
                 };
                 return response;
             }
@@ -124,6 +136,7 @@ export class AuthenticationService {
                 refreshToken: this.generateRefreshToken(user.profile._id),
                 expiresIn: expires_accessToken,
                 success: true,
+                statusCode: HttpStatusCode.OK,
             };
             return response;
         } catch (error: any) {
@@ -141,14 +154,22 @@ export class AuthenticationService {
     async registerUser(
         params: ISignupRequest
     ): Promise<IAuthenticationResponse> {
-        // throw new APIError("BAD REQUEST", 400, "This is a bad request", true);
+        const { error } = this.validateCreate(params);
+        if (error) {
+            return {
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                message: error.details[0].message,
+            };
+        }
 
         try {
             const existingUser = await User.findOne({ email: params.email });
             if (existingUser) {
                 const response: IAuthenticationResponse = {
-                    error: "User already exist. Please sign in",
+                    message: "User already exist. Please sign in",
                     success: false,
+                    statusCode: HttpStatusCode.BAD_REQUEST,
                 };
                 return response;
             }
@@ -176,6 +197,7 @@ export class AuthenticationService {
                 refreshToken: this.generateRefreshToken(profile._id),
                 expiresIn: expires_accessToken,
                 success: true,
+                statusCode: HttpStatusCode.CREATED,
             };
             return response;
         } catch (error: any) {
