@@ -1,8 +1,9 @@
+import { Request, Response } from "express";
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const { get } = require("config");
 
-function auth(req, res, next) {
+function auth(req: Request, res: Response, next: Function) {
     const token = req.header("x-auth-token");
     if (!token) return res.status(400).send("Access denied. No token provided");
     try {
@@ -15,12 +16,12 @@ function auth(req, res, next) {
     }
 }
 
-function admin(req, res, next) {
-    if (!req.user.isAdmin) return res.status(403).send("Access Denied");
+function admin(req: Request, res: Response, next: Function) {
+    if (!req.body.user.isAdmin) return res.status(403).send("Access Denied");
     next();
 }
 
-function refresh(req, res, next) {
+function refresh(req: Request, res: Response, next: Function) {
     const refreshToken = req.body.refreshToken;
     if (!refreshToken) return res.status(400).send("Refresh Token required");
     try {
