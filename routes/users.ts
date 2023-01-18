@@ -23,15 +23,13 @@ router.put("/me", auth, async (req: Request, res: Response) => {
 });
 router.patch("/me", auth, async (req: Request, res: Response) => {
     const service = new UserService();
-    const { error } = service.validateProfileUpdate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
 
     try {
         let result = await service.updateProfile(req.body);
-        if (result) {
-            res.status(204).send();
+        if (result.success) {
+            res.status(result.statusCode).send();
         } else {
-            res.status(404).send();
+            res.status(result.statusCode).send(result);
         }
     } catch (error: any) {
         res.status(201).send();
