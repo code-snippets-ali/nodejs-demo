@@ -6,7 +6,7 @@ const config = require("config");
 const morgan = require("morgan");
 const courses = require("./routes/courses");
 const users = require("./routes/users");
-const auth = require("./routes/authenticate");
+const authenticate = require("./routes/authenticate");
 const doctors = require("./routes/doctors");
 const Joi = require("joi");
 const error = require("./middleware/errorhandler");
@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(express.static("public"));
 app.use("/api/courses", courses);
 app.use("/api/users", users);
-app.use("/api/authenticate", auth);
+app.use("/api/authenticate", authenticate);
 app.use("/api/doctors", doctors);
 
 app.use(error);
