@@ -25,7 +25,7 @@ function refresh(req, res, next) {
     if (!refreshToken) return res.status(400).send("Refresh Token required");
     try {
         const decoded = jwt.verify(refreshToken, config.get("jwtPrivateKey"));
-        req.user = decoded;
+        req.body.user = decoded;
         next();
     } catch (ex) {
         console.log(ex);

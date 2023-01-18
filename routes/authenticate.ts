@@ -37,7 +37,7 @@ router.post("/signin", async (req, res) => {
 router.post("/token", refresh, async (req, res) => {
     const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.refreshToken(
-        req.body.us
+        req.body.user
     );
     res.header("x-auth-token", authentication.accessToken ?? "").send(
         authentication
