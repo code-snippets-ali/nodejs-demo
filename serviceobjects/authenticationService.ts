@@ -132,7 +132,10 @@ export class AuthenticationService {
                 return response;
             }
             const response: IAuthenticationResponse = {
-                accessToken: this.generateToken(user.profile._id, user.isAdmin),
+                accessToken: this.generateToken(
+                    user.profile._id,
+                    user.profile.isAdmin
+                ),
                 refreshToken: this.generateRefreshToken(user.profile._id),
                 expiresIn: expires_accessToken,
                 success: true,

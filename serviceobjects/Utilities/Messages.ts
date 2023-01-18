@@ -6,11 +6,11 @@ enum Validations {
 
     password = "Please proide a password for regietering new account.",
     password_min = "Please provide atleast 5 characters for your password.",
-    password_max = "Password is too long. Please do not provide more than 500 characters for password.",
+    password_max = "Password is too long. Please do not provide more than 50 characters for password.",
 
     name_required = "Please provide your name to register a new account.",
     name_min = "Please provide atleast one character for your name",
-    name_max = "Name is too long. Please do not provide more than 500 characters.",
+    name_max = "Name is too long. Please do not provide more than 100 characters.",
 }
 
 export = class Messages {
