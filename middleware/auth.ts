@@ -7,11 +7,11 @@ const { get } = require("config");
 function auth(req: Request, res: Response, next: Function) {
     const token = req.header("x-auth-token");
     if (!token) {
+        return res.status(HttpStatusCode.BAD_REQUEST).send({
+            success: false,
+            message: "Access denied. Please provide an access token",
+        });
     }
-    return res.status(HttpStatusCode.BAD_REQUEST).send({
-        success: false,
-        message: "Access denied. Please provide an access token",
-    });
     try {
         const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
         req.body.user = decoded;
