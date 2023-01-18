@@ -16,34 +16,28 @@ const router = express.Router();
 
 router.post("/register", async (req: Request, res: Response) => {
     const service = new AuthenticationService();
-    const { error } = service.validateCreate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
     const authentication: IAuthenticationResponse = await service.registerUser(
         req.body
     );
-    res.header("x-auth-token", authentication.accessToken ?? "").send(
-        authentication
-    );
+    res.status(authentication.statusCode)
+        .header("x-auth-token", authentication.accessToken ?? "")
+        .send(authentication);
 });
 
 router.post("/signin", async (req, res) => {
     const service = new AuthenticationService();
-    const { error } = service.validateSignin(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
     const authentication: IAuthenticationResponse = await service.signIn(
         req.body
     );
-    res.header("x-auth-token", authentication.accessToken ?? "").send(
-        authentication
-    );
+    res.status(authentication.statusCode)
+        .header("x-auth-token", authentication.accessToken ?? "")
+        .send(authentication);
 });
 
 router.post("/token", refresh, async (req, res) => {
     const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.refreshToken(
-        req.body
+        req.body.user
     );
     res.header("x-auth-token", authentication.accessToken ?? "").send(
         authentication
