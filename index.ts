@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 import express, { Express, Request, Response } from "express";
+import logger from "./serviceobjects/Utilities/logger";
 const info = require("debug")("app:info");
 const databaseLog = require("debug")("app:db");
 const config = require("config");
@@ -8,7 +9,6 @@ const courses = require("./routes/courses");
 const users = require("./routes/users");
 const authenticate = require("./routes/authenticate");
 const doctors = require("./routes/doctors");
-const Joi = require("joi");
 const error = require("./middleware/errorhandler");
 
 const app = express();
@@ -31,8 +31,23 @@ app.use("/api/courses", courses);
 app.use("/api/users", users);
 app.use("/api/authenticate", authenticate);
 app.use("/api/doctors", doctors);
-
 app.use(error);
+
+process.on("uncaughtException", (ex) => {
+    console.log("Here is uncaught exception");
+    logger.error(ex.message, {
+        metadata: { Type: "Unhandled Exception" },
+    });
+});
+process.on("unhandledRejection", (ex: any) => {
+    console.log("Here is uncaught exception");
+    logger.error(ex.message, {
+        metadata: { Type: "Unhandled Exception" },
+    });
+});
+// throw new Error("System failed to launch");
+// const p = Promise.reject(new Error("This is exception for promise rejection"));
+// p.then(() => console.log("Promise completed"));
 //Configuration
 // console.log(" Application name: " + config.get("name"));
 // console.log(" Mail Server: " + config.get("mail.host"));

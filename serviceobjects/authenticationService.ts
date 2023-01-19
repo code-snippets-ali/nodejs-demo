@@ -65,35 +65,24 @@ export class AuthenticationService {
     async refreshToken(
         params: IRefreshTokenRequest
     ): Promise<IAuthenticationResponse> {
-        try {
-            const profile = await Profile.findOne({ _id: params._id });
+        const profile = await Profile.findOne({ _id: params._id });
 
-            if (!profile) {
-                const response: IAuthenticationResponse = {
-                    success: false,
-                    message: "Unable to refresh token. Please sign in again",
-                    statusCode: HttpStatusCode.BAD_REQUEST,
-                };
-                return response;
-            }
+        if (!profile) {
             const response: IAuthenticationResponse = {
-                accessToken: this.generateToken(profile._id, profile.isAdmin),
-                refreshToken: this.generateRefreshToken(profile._id),
-                expiresIn: expires_accessToken,
-                success: true,
-                statusCode: HttpStatusCode.OK,
+                success: false,
+                message: "Unable to refresh token. Please sign in again",
+                statusCode: HttpStatusCode.BAD_REQUEST,
             };
             return response;
-        } catch (error: any) {
-            console.log("Creation Error");
-            throw new APIError(
-                "Server Error",
-                HttpStatusCode.INTERNAL_SERVER,
-                error.message,
-                "This is message for user",
-                true
-            );
         }
+        const response: IAuthenticationResponse = {
+            accessToken: this.generateToken(profile._id, profile.isAdmin),
+            refreshToken: this.generateRefreshToken(profile._id),
+            expiresIn: expires_accessToken,
+            success: true,
+            statusCode: HttpStatusCode.OK,
+        };
+        return response;
     }
 
     async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
@@ -106,52 +95,41 @@ export class AuthenticationService {
             };
         }
 
-        try {
-            let user = await User.findOne({ email: params.email }).populate(
-                "profile"
-            );
+        let user = await User.findOne({ email: params.email }).populate(
+            "profile"
+        );
 
-            if (!user) {
-                const response: IAuthenticationResponse = {
-                    success: false,
-                    message: "There is no user with this email id",
-                    statusCode: HttpStatusCode.NOT_FOUND,
-                };
-                return response;
-            }
-            const isValidPassword = await bcrypt.compare(
-                params.password,
-                user.password
-            );
-            if (!isValidPassword) {
-                const response: IAuthenticationResponse = {
-                    success: false,
-                    message: "This is incorrect password",
-                    statusCode: HttpStatusCode.BAD_REQUEST,
-                };
-                return response;
-            }
+        if (!user) {
             const response: IAuthenticationResponse = {
-                accessToken: this.generateToken(
-                    user.profile._id,
-                    user.profile.isAdmin
-                ),
-                refreshToken: this.generateRefreshToken(user.profile._id),
-                expiresIn: expires_accessToken,
-                success: true,
-                statusCode: HttpStatusCode.OK,
+                success: false,
+                message: "There is no user with this email id",
+                statusCode: HttpStatusCode.NOT_FOUND,
             };
             return response;
-        } catch (error: any) {
-            console.log("Creation Error");
-            throw new APIError(
-                "Server Error",
-                HttpStatusCode.INTERNAL_SERVER,
-                error.message,
-                "This is message for user",
-                true
-            );
         }
+        const isValidPassword = await bcrypt.compare(
+            params.password,
+            user.password
+        );
+        if (!isValidPassword) {
+            const response: IAuthenticationResponse = {
+                success: false,
+                message: "This is incorrect password",
+                statusCode: HttpStatusCode.BAD_REQUEST,
+            };
+            return response;
+        }
+        const response: IAuthenticationResponse = {
+            accessToken: this.generateToken(
+                user.profile._id,
+                user.profile.isAdmin
+            ),
+            refreshToken: this.generateRefreshToken(user.profile._id),
+            expiresIn: expires_accessToken,
+            success: true,
+            statusCode: HttpStatusCode.OK,
+        };
+        return response;
     }
 
     async registerUser(
@@ -165,54 +143,42 @@ export class AuthenticationService {
                 message: error.details[0].message,
             };
         }
-
-        try {
-            const existingUser = await User.findOne({ email: params.email });
-            if (existingUser) {
-                const response: IAuthenticationResponse = {
-                    message: "User already exist. Please sign in",
-                    success: false,
-                    statusCode: HttpStatusCode.BAD_REQUEST,
-                };
-                return response;
-            }
-
-            const salt = await bcrypt.genSalt(12);
-            const hash = await bcrypt.hash(params.password, salt);
-
-            const user = new User({
-                name: params.name,
-                email: params.email,
-                password: hash,
-            });
-
-            const profile = new Profile({
-                name: params.name,
-                email: params.email,
-            });
-            user.profile = profile;
-            await user.save();
-            profile.user = user;
-            await profile.save();
-
+        const existingUser = await User.findOne({ email: params.email });
+        if (existingUser) {
             const response: IAuthenticationResponse = {
-                accessToken: this.generateToken(profile._id, profile.isAdmin),
-                refreshToken: this.generateRefreshToken(profile._id),
-                expiresIn: expires_accessToken,
-                success: true,
-                statusCode: HttpStatusCode.CREATED,
+                message: "User already exist. Please sign in",
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
             };
             return response;
-        } catch (error: any) {
-            console.log("Creation Error");
-            throw new APIError(
-                "Server Error",
-                HttpStatusCode.INTERNAL_SERVER,
-                error.message,
-                "This is message for user",
-                true
-            );
         }
+
+        const salt = await bcrypt.genSalt(12);
+        const hash = await bcrypt.hash(params.password, salt);
+
+        const user = new User({
+            name: params.name,
+            email: params.email,
+            password: hash,
+        });
+
+        const profile = new Profile({
+            name: params.name,
+            email: params.email,
+        });
+        user.profile = profile;
+        await user.save();
+        profile.user = user;
+        await profile.save();
+
+        const response: IAuthenticationResponse = {
+            accessToken: this.generateToken(profile._id, profile.isAdmin),
+            refreshToken: this.generateRefreshToken(profile._id),
+            expiresIn: expires_accessToken,
+            success: true,
+            statusCode: HttpStatusCode.CREATED,
+        };
+        return response;
     }
 
     //#region Generate Access and Refresh token

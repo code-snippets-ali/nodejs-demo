@@ -20,7 +20,9 @@
         "lodash": "^4.17.21",
         "mongoose": "^6.8.0",
         "morgan": "^1.10.0",
-        "underscore": "^1.13.4"
+        "underscore": "^1.13.4",
+        "winston": "^3.8.2",
+        "winston-mongodb": "^5.1.0"
     },
     "devDependencies": {
         "@types/express": "^4.17.15",

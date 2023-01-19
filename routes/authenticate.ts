@@ -14,14 +14,17 @@ const { refresh } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/register", async (req: Request, res: Response) => {
-    const service = new AuthenticationService();
-    const authentication: IAuthenticationResponse = await service.registerUser(
-        req.body
-    );
-    res.status(authentication.statusCode)
-        .header("x-auth-token", authentication.accessToken ?? "")
-        .send(authentication);
+router.post("/register", async (req, res, next) => {
+    try {
+        const service = new AuthenticationService();
+        const authentication: IAuthenticationResponse =
+            await service.registerUser(req.body);
+        res.status(authentication.statusCode)
+            .header("x-auth-token", authentication.accessToken ?? "")
+            .send(authentication);
+    } catch (ex: any) {
+        next(ex);
+    }
 });
 
 router.post("/signin", async (req, res) => {
