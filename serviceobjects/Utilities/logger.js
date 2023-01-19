@@ -1,7 +1,8 @@
 const winston = require("winston");
+require("winston-mongodb");
 
 const logger = winston.createLogger({
-    level: "info",
+    level: "error",
     format: winston.format.json(),
     defaultMeta: { service: "user-service" },
     transports: [
@@ -11,6 +12,9 @@ const logger = winston.createLogger({
         //
         new winston.transports.File({ filename: "error.log", level: "error" }),
         new winston.transports.File({ filename: "combined.log" }),
+        new winston.transports.MongoDB({
+            db: "mongodb+srv://ializadar:Mongos02@cluster0.j1cl2.mongodb.net/playground?retryWrites=true&w=majority",
+        }),
     ],
 });
 
