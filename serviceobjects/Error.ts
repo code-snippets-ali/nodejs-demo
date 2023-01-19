@@ -21,7 +21,7 @@ export class ResultError {
 
 export class BaseError extends Error {
     public readonly name: string;
-    public readonly httpCode: HttpStatusCode;
+    public readonly statusCode: HttpStatusCode;
     public readonly userMessage: string;
     public readonly isOperational: boolean;
 
@@ -36,7 +36,7 @@ export class BaseError extends Error {
         Object.setPrototypeOf(this, new.target.prototype);
 
         this.name = name;
-        this.httpCode = httpCode;
+        this.statusCode = httpCode;
         this.userMessage = userMessage;
         this.isOperational = isOperational;
 
@@ -48,11 +48,11 @@ export class BaseError extends Error {
 export class APIError extends BaseError {
     constructor(
         name: string,
-        httpCode = HttpStatusCode.INTERNAL_SERVER,
+        statusCode = HttpStatusCode.INTERNAL_SERVER,
         description = "internal server error",
         userMessage = "There is some error in service",
         isOperational = true
     ) {
-        super(name, httpCode, description, userMessage, isOperational);
+        super(name, statusCode, description, userMessage, isOperational);
     }
 }
