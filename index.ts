@@ -1,6 +1,6 @@
-const winston = require("winston");
 const mongoose = require("mongoose");
 import express, { Express, Request, Response } from "express";
+import logger from "./serviceobjects/Utilities/logger";
 const info = require("debug")("app:info");
 const databaseLog = require("debug")("app:db");
 const config = require("config");
@@ -9,30 +9,9 @@ const courses = require("./routes/courses");
 const users = require("./routes/users");
 const authenticate = require("./routes/authenticate");
 const doctors = require("./routes/doctors");
-const Joi = require("joi");
 const error = require("./middleware/errorhandler");
 
 const app = express();
-
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.json(),
-    defaultMeta: { service: "user-service" },
-    transports: [
-        //
-        // - Write all logs with importance level of `error` or less to `error.log`
-        // - Write all logs with importance level of `info` or less to `combined.log`
-        //
-        new winston.transports.File({ filename: "error.log", level: "error" }),
-        new winston.transports.File({ filename: "combined.log" }),
-    ],
-});
-
-logger.add(
-    new winston.transports.Console({
-        format: winston.format.simple(),
-    })
-);
 
 if (!config.get("jwtPrivateKey")) {
     console.log("Fatal error: jwtPrivateKey is not set");
@@ -56,7 +35,19 @@ app.use(error);
 
 process.on("uncaughtException", (ex) => {
     console.log("Here is uncaught exception");
+    logger.error(ex.message, {
+        metadata: { Type: "Unhandled Exception" },
+    });
 });
+process.on("unhandledRejection", (ex: any) => {
+    console.log("Here is uncaught exception");
+    logger.error(ex.message, {
+        metadata: { Type: "Unhandled Exception" },
+    });
+});
+// throw new Error("System failed to launch");
+// const p = Promise.reject(new Error("This is exception for promise rejection"));
+// p.then(() => console.log("Promise completed"));
 //Configuration
 // console.log(" Application name: " + config.get("name"));
 // console.log(" Mail Server: " + config.get("mail.host"));

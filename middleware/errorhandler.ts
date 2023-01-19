@@ -1,9 +1,8 @@
-import { APIError } from "../serviceobjects/Error";
 import { NextFunction, Request, Response } from "express";
 import logger from "../serviceobjects/Utilities/logger";
 
 module.exports = function (
-    error: APIError,
+    error: Error,
     req: Request,
     res: Response,
     next: NextFunction
@@ -16,6 +15,7 @@ module.exports = function (
     // logger.info(error.message, [req.body, req.url, req.query, req.params]);
     logger.error(error.message, {
         metadata: {
+            Type: "Handled Exception",
             Body: req.body,
             URL: req.url,
             Query: req.query,
