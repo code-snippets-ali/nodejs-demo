@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { HttpStatusCode } from "../serviceobjects/Error";
+import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 const jwt = require("jsonwebtoken");
-const config = require("config");
 const { get } = require("config");
 
 function auth(req: Request, res: Response, next: Function) {
@@ -13,7 +13,7 @@ function auth(req: Request, res: Response, next: Function) {
         });
     }
     try {
-        const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
+        const decoded = jwt.verify(token, appConfig(Settings.JWTPrivateKey));
         req.body.user = decoded;
         next();
     } catch (ex) {
@@ -45,7 +45,10 @@ function refresh(req: Request, res: Response, next: Function) {
     }
 
     try {
-        const decoded = jwt.verify(refreshToken, config.get("jwtPrivateKey"));
+        const decoded = jwt.verify(
+            refreshToken,
+            appConfig(Settings.JWTPrivateKey)
+        );
         req.body.user = decoded;
         next();
     } catch (ex) {
