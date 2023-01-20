@@ -1,4 +1,5 @@
 const winston = require("winston");
+const { appConfig, Settings } = require("./Settings");
 require("winston-mongodb");
 
 const logger = winston.createLogger({
@@ -13,7 +14,7 @@ const logger = winston.createLogger({
         new winston.transports.File({ filename: "error.log", level: "error" }),
         new winston.transports.File({ filename: "combined.log" }),
         new winston.transports.MongoDB({
-            db: "mongodb+srv://ializadar:Mongos02@cluster0.j1cl2.mongodb.net/playground?retryWrites=true&w=majority",
+            db: appConfig(Settings.DBString),
         }),
     ],
 });

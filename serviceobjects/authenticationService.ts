@@ -7,9 +7,9 @@ import { DBConstants } from "../database/DBConstants";
 import { ResultError, APIError, HttpStatusCode } from "./Error";
 import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
+import { appConfig, Settings } from "./Utilities/Settings";
 
 const jwt = require("jsonwebtoken");
-const config = require("config");
 
 const expires_accessToken = "8h";
 const expires_RefreshToken = "30d";
@@ -186,7 +186,7 @@ export class AuthenticationService {
     generateToken(profileId: String, isAdmin: Boolean): string {
         const token = jwt.sign(
             { _id: profileId, isAdmin: isAdmin },
-            config.get("jwtPrivateKey"),
+            appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );
         return token;
@@ -195,7 +195,7 @@ export class AuthenticationService {
     generateRefreshToken(profileId: String): string {
         const refresh_token = jwt.sign(
             { _id: profileId },
-            config.get("jwtPrivateKey"),
+            appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_RefreshToken }
         );
         return refresh_token;

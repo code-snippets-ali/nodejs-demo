@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
+const { appConfig, Settings } = require("../serviceobjects/Utilities/Settings");
 module.exports = function (app) {
     mongoose
-        .connect(
-            "mongodb+srv://ializadar:Mongos02@cluster0.j1cl2.mongodb.net/playground?retryWrites=true&w=majority"
-        )
+        .connect(appConfig(Settings.DBString))
         .then(() => console.log("Connected to MongoDB..."));
 };
