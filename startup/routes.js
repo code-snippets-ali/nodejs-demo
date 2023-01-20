@@ -10,7 +10,7 @@ const app = express();
 module.exports = function () {
     //
     app.use(express.json());
-    app.use(express.static("../public"));
+    app.use(express.static("public"));
     app.use("/api/courses", courses);
     app.use("/api/users", users);
     app.use("/api/authenticate", authenticate);
