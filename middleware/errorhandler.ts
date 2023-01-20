@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import logger from "../serviceobjects/Utilities/logger";
+import { logger } from "../serviceobjects/Utilities/logger";
 
 module.exports = function (
     error: Error,
@@ -12,7 +12,9 @@ module.exports = function (
         message:
             "There is some issue in our service. Please try later or contact support",
     });
+
     // logger.info(error.message, [req.body, req.url, req.query, req.params]);
+
     logger.error(error.message, {
         metadata: {
             Type: "Handled Exception",

@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-import logger from "./serviceobjects/Utilities/logger";
 const info = require("debug")("app:info");
 const databaseLog = require("debug")("app:db");
 
