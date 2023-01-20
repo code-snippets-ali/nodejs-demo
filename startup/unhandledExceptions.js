@@ -1,4 +1,4 @@
-const logger = require("../serviceobjects/Utilities/logger");
+const { logger } = require("../serviceobjects/Utilities/logger");
 
 module.exports = function () {
     process.on("uncaughtException", (ex) => {

@@ -8,9 +8,8 @@ const morgan = require("morgan");
 //Middleware
 require("./startup/unhandledExceptions")();
 require("./startup/config")();
+require("./startup/db")();
 require("./startup/routes")();
-require("./startup/db")();
-require("./startup/db")();
 // throw new Error("System failed to launch");
 // const p = Promise.reject(new Error("This is exception for promise rejection"));
 // p.then(() => console.log("Promise completed"));
