@@ -1,7 +1,7 @@
 const config = require("config");
 
 export enum Settings {
-    JWTPrivateKey = "jwtPrivateKey",
+    JWTPrivateKey = "JWTPrivateKey",
     DBString = "DBString",
 }
 
