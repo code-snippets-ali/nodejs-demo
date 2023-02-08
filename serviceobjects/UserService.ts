@@ -6,7 +6,7 @@ import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
 
 export interface IProfile extends IResponse {
-    id: String;
+    id?: String;
     name?: string;
     phone?: string;
     gender?: string;
@@ -24,6 +24,14 @@ export class UserService {
     async me(id: string): Promise<IProfile> {
         try {
             const profile = await Profile.findById(id);
+            if (!profile) {
+                const response: IProfile = {
+                    success: false,
+                    message: "There is no profile for this user.",
+                    statusCode: HttpStatusCode.NOT_FOUND,
+                };
+                return response;
+            }
             const response: IProfile = {
                 success: true,
                 statusCode: 200,
