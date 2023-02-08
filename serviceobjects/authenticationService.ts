@@ -102,7 +102,7 @@ export class AuthenticationService {
         if (!user) {
             const response: IAuthenticationResponse = {
                 success: false,
-                message: "There is no user with this email id",
+                message: "The email you've entered doesn't match any account.",
                 statusCode: HttpStatusCode.NOT_FOUND,
             };
             return response;
@@ -114,7 +114,7 @@ export class AuthenticationService {
         if (!isValidPassword) {
             const response: IAuthenticationResponse = {
                 success: false,
-                message: "This is incorrect password",
+                message: "The password is incorrect.",
                 statusCode: HttpStatusCode.BAD_REQUEST,
             };
             return response;

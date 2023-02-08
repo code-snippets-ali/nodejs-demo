@@ -6,9 +6,10 @@ const authenticate = require("../routes/authenticate");
 const doctors = require("../routes/doctors");
 const error = require("../middleware/errorhandler");
 const app = express();
-
+const cors = require("cors");
 module.exports = function () {
     //
+    app.use(cors());
     app.use(express.json());
     app.use(express.static("public"));
     app.use("/api/courses", courses);

@@ -5,7 +5,7 @@ import { ResultError, APIError, HttpStatusCode } from "./Error";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
 
-export interface IProfile {
+export interface IProfile extends IResponse {
     id: String;
     name?: string;
     phone?: string;
@@ -25,6 +25,8 @@ export class UserService {
         try {
             const profile = await Profile.findById(id);
             const response: IProfile = {
+                success: true,
+                statusCode: 200,
                 id: profile.id,
                 name: profile.name,
                 phone: profile.phone,
