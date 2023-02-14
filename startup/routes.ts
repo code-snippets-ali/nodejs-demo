@@ -18,7 +18,7 @@ module.exports = function () {
     app.use("/api/doctors", doctors);
     app.use(error);
 
-    const port = process.env.PORT || 8182;
+    const port = process.env.PORT || 8080;
 
     app.listen(port, () => {
         console.log(`Listening on port ${port}`);
