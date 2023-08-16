@@ -1,5 +1,5 @@
+const { Authenticate } = require("../database/authenticate");
 const { User } = require("../database/user");
-const { Profile } = require("../database/profile");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 import { DBConstants } from "../database/DBConstants";
@@ -65,9 +65,9 @@ export class AuthenticationService {
     async refreshToken(
         params: IRefreshTokenRequest
     ): Promise<IAuthenticationResponse> {
-        const profile = await Profile.findOne({ _id: params._id });
+        const user = await User.findOne({ _id: params._id });
 
-        if (!profile) {
+        if (!user) {
             const response: IAuthenticationResponse = {
                 success: false,
                 message: "Unable to refresh token. Please sign in again",
@@ -76,8 +76,8 @@ export class AuthenticationService {
             return response;
         }
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(profile._id, profile.isAdmin),
-            refreshToken: this.generateRefreshToken(profile._id),
+            accessToken: this.generateToken(user._id, user.access_level),
+            refreshToken: this.generateRefreshToken(user._id),
             expiresIn: expires_accessToken,
             success: true,
             statusCode: HttpStatusCode.OK,
@@ -95,11 +95,11 @@ export class AuthenticationService {
             };
         }
 
-        let user = await User.findOne({ email: params.email }).populate(
-            "profile"
-        );
+        let authenticated = await Authenticate.findOne({
+            email: params.email,
+        }).populate("user");
 
-        if (!user) {
+        if (!authenticated) {
             const response: IAuthenticationResponse = {
                 success: false,
                 message: "The email you've entered doesn't match any account.",
@@ -109,7 +109,7 @@ export class AuthenticationService {
         }
         const isValidPassword = await bcrypt.compare(
             params.password,
-            user.password
+            authenticated.password
         );
         if (!isValidPassword) {
             const response: IAuthenticationResponse = {
@@ -121,10 +121,10 @@ export class AuthenticationService {
         }
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(
-                user.profile._id,
-                user.profile.isAdmin
+                authenticated.user._id,
+                authenticated.user.access_level
             ),
-            refreshToken: this.generateRefreshToken(user.profile._id),
+            refreshToken: this.generateRefreshToken(authenticated.user._id),
             expiresIn: expires_accessToken,
             success: true,
             statusCode: HttpStatusCode.OK,
@@ -143,8 +143,10 @@ export class AuthenticationService {
                 message: error.details[0].message,
             };
         }
-        const existingUser = await User.findOne({ email: params.email });
-        if (existingUser) {
+        const authenticated = await Authenticate.findOne({
+            email: params.email,
+        });
+        if (authenticated) {
             const response: IAuthenticationResponse = {
                 message: "User already exist. Please sign in",
                 success: false,
@@ -156,24 +158,22 @@ export class AuthenticationService {
         const salt = await bcrypt.genSalt(12);
         const hash = await bcrypt.hash(params.password, salt);
 
-        const user = new User({
-            name: params.name,
+        const authentication = new Authenticate({
             email: params.email,
             password: hash,
         });
 
-        const profile = new Profile({
+        const user = new User({
             name: params.name,
             email: params.email,
         });
-        user.profile = profile;
+        authentication.user = user;
+        await authentication.save();
         await user.save();
-        profile.user = user;
-        await profile.save();
 
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(profile._id, profile.isAdmin),
-            refreshToken: this.generateRefreshToken(profile._id),
+            accessToken: this.generateToken(user._id, user.access_level),
+            refreshToken: this.generateRefreshToken(user._id),
             expiresIn: expires_accessToken,
             success: true,
             statusCode: HttpStatusCode.CREATED,
@@ -183,18 +183,18 @@ export class AuthenticationService {
 
     //#region Generate Access and Refresh token
 
-    generateToken(profileId: String, isAdmin: Boolean): string {
+    generateToken(userId: string, access_level: number): string {
         const token = jwt.sign(
-            { _id: profileId, isAdmin: isAdmin },
+            { _id: userId, isAdmin: access_level },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );
         return token;
     }
 
-    generateRefreshToken(profileId: String): string {
+    generateRefreshToken(userId: String): string {
         const refresh_token = jwt.sign(
-            { _id: profileId },
+            { _id: userId },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_RefreshToken }
         );

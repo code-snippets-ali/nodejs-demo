@@ -1,33 +1,34 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-const { DBConstants } = require("./DBConstants");
-
-const userSchema = new Schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        minlength: DBConstants.NameMinLength,
-        maxlength: DBConstants.NameMaxLength,
     },
-    email: {
-        type: String,
+    access_level: {
+        type: Number,
         required: true,
-        maxlength: DBConstants.EmailMaxLength,
-        unique: true,
+        default: 6,
     },
-    password: {
-        type: String,
-        required: true,
-        minlength: DBConstants.PasswordMinLength,
-        maxlength: DBConstants.PasswordHashedMaxLength,
-    },
-    profile: {
+    phone: String,
+    gender: String,
+    houseNumber: String,
+    streetNumber: String,
+    city: String,
+    state: String,
+    country: String,
+
+    doctor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Profile",
+        ref: "Doctor",
+    },
+
+    patient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Patient",
     },
 });
 
 const User = mongoose.model("User", userSchema);
-
 exports.User = User;
 exports.userSchema = userSchema;
