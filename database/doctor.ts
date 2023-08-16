@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Schema } from "mongoose";
 
-const doctorSchema = new mongoose.Schema({
+const doctorSchema = new Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

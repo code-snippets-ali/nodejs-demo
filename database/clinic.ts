@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const { Doctor, doctorSchema } = require("./doctor.js");
+import mongoose, { Document, Schema } from "mongoose";
+
+const doctorSchema = require("./doctor");
 const clinicSchema = new mongoose.Schema({
     name: {
         type: String,

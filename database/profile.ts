@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Schema } from "mongoose";
 const { userSchema } = require("./user");
+
 const profileSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -13,7 +14,6 @@ const profileSchema = new mongoose.Schema({
     phone: String,
     gender: String,
     houseNumber: String,
-    streetNumber: String,
     streetNumber: String,
     city: String,
     state: String,
