@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Schema } from "mongoose";
 
 const { DBConstants } = require("./DBConstants");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
     name: {
         type: String,
         required: true,
