@@ -6,15 +6,24 @@ const doctorSchema = new Schema({
         required: true,
         ref: "User",
     },
-
-    specialities: {
+    licence_number: String,
+    title: String,
+    qualification: String,
+    education: String,
+    board_certificates: String,
+    specializations: {
         type: [String],
     },
+    registration_number: String,
+    practice_start_date: Date,
+    languages_spoken: [String],
+    professional_memberships: String,
+    research_interests: String,
+    awards_and_recognition: String,
+    general_description: String,
+    profile_picture_url: String,
+    hospital_affiliation: String,
     training: String,
-    certification: String,
-    practiceStartDate: Date,
-    education: String,
-    licences: String,
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);
