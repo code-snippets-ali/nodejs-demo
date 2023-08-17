@@ -4,8 +4,6 @@ import { getProfile, updateProfile } from "../controllers/userController";
 const { auth } = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/me", auth, getProfile);
-
-router.patch("/me", auth, updateProfile);
+router.route("/me").get(auth, getProfile).patch(auth, updateProfile);
 
 module.exports = router;

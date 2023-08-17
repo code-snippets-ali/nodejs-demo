@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 
 const courses = require("../routes/courses");
 const users = require("../routes/users");
@@ -16,6 +16,13 @@ module.exports = function () {
     app.use("/api/users", users);
     app.use("/api/authenticate", authenticate);
     app.use("/api/doctors", doctors);
+    app.all("*", (req: Request, res: Response, next: NextFunction) => {
+        res.status(404).json({
+            success: false,
+            message: `Can't find the following URL ${req.originalUrl}`,
+            statusCode: 404,
+        });
+    });
     app.use(error);
 
     const port = process.env.PORT || 8182;
