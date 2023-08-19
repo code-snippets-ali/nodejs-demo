@@ -15,7 +15,6 @@ export async function register(
 ) {
     try {
         const service = new AuthenticationService();
-
         const authentication: IAuthenticationResponse =
             await service.registerUser(req.body);
 
@@ -36,7 +35,7 @@ export async function signin(req: Request, res: Response, next: NextFunction) {
         .header("x-auth-token", authentication.accessToken ?? "")
         .send(authentication);
 }
-
+// This is comments
 export async function token(req: Request, res: Response, next: NextFunction) {
     const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.refreshToken(

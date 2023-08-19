@@ -1,11 +1,10 @@
 const { User } = require("../database/user");
-const { Profile } = require("../database/profile");
 import Joi from "joi";
 import { ResultError, APIError, HttpStatusCode } from "./Error";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
 
-export interface IProfile extends IResponse {
+export interface IUser extends IResponse {
     id?: String;
     name?: string;
     phone?: string;
@@ -21,30 +20,30 @@ export interface IProfile extends IResponse {
 export class UserService {
     constructor() {}
 
-    async me(id: string): Promise<IProfile> {
+    async me(id: string): Promise<IUser> {
         try {
-            const profile = await Profile.findById(id);
-            if (!profile) {
-                const response: IProfile = {
+            const user = await User.findById(id);
+            if (!user) {
+                const response: IUser = {
                     success: false,
                     message: "There is no profile for this user.",
                     statusCode: HttpStatusCode.NOT_FOUND,
                 };
                 return response;
             }
-            const response: IProfile = {
+            const response: IUser = {
                 success: true,
                 statusCode: 200,
-                id: profile.id,
-                name: profile.name,
-                phone: profile.phone,
-                gender: profile.gender,
-                houseNumber: profile.houseNumber,
-                streetNumber: profile.streetNumber,
-                streetName: profile.streetName,
-                city: profile.city,
-                state: profile.state,
-                country: profile.country,
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                gender: user.gender,
+                houseNumber: user.houseNumber,
+                streetNumber: user.streetNumber,
+                streetName: user.streetName,
+                city: user.city,
+                state: user.state,
+                country: user.country,
             };
             return response;
         } catch (error: any) {
@@ -60,7 +59,7 @@ export class UserService {
 
     async updateProfile(requestBody: any): Promise<IResponse> {
         try {
-            const params: IProfile = requestBody;
+            const params: IUser = requestBody;
 
             const { error } = this.validateProfileUpdate(params);
             if (error) {
@@ -71,7 +70,7 @@ export class UserService {
                 };
             }
             params.id = requestBody.user._id;
-            const profile = await Profile.findById(params.id);
+            const profile = await User.findById(params.id);
             if (!profile) {
                 return {
                     success: false,
@@ -96,7 +95,7 @@ export class UserService {
         }
     }
 
-    validateProfileUpdate(req: IProfile): any {
+    validateProfileUpdate(req: IUser): any {
         const schema = Joi.object({
             name: Joi.string()
                 .min(1)

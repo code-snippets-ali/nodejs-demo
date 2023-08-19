@@ -1,12 +1,4 @@
-import {
-    AuthenticationService,
-    IAuthenticationResponse,
-    ISignupRequest,
-} from "../serviceobjects/authenticationService";
-
-import express, { Express, NextFunction, Request, Response } from "express";
-const _ = require("lodash");
-
+import express from "express";
 const { refresh } = require("../middleware/auth");
 
 const {

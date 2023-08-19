@@ -19,7 +19,7 @@ export class ResultError {
     }
 }
 
-export class BaseError extends Error {
+export class AppError extends Error {
     public readonly name: string;
     public readonly statusCode: HttpStatusCode;
     public readonly userMessage: string;
@@ -45,7 +45,7 @@ export class BaseError extends Error {
 }
 
 //free to extend the BaseError
-export class APIError extends BaseError {
+export class APIError extends AppError {
     constructor(
         name: string,
         statusCode = HttpStatusCode.INTERNAL_SERVER,
