@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
+import { APIError, HttpStatusCode } from "../serviceobjects/Error";
 
 const courses = require("../routes/courses");
 const users = require("../routes/users");
@@ -17,11 +18,19 @@ module.exports = function () {
     app.use("/api/authenticate", authenticate);
     app.use("/api/doctors", doctors);
     app.all("*", (req: Request, res: Response, next: NextFunction) => {
-        res.status(404).json({
-            success: false,
-            message: `Can't find the following URL ${req.originalUrl}`,
-            statusCode: 404,
-        });
+        const apiError = new APIError(
+            "URL not found",
+            HttpStatusCode.NOT_FOUND,
+            `Following URL is not found ${req.baseUrl + req.originalUrl}`,
+            "",
+            false
+        );
+        next(apiError);
+        // res.status(404).json({
+        //     success: false,
+        //     message: `Can't find the following URL ${req.originalUrl}`,
+        //     statusCode: 404,
+        // });
     });
     app.use(error);
 
