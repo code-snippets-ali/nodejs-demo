@@ -8,6 +8,7 @@ const authenticateSchema = new Schema({
         required: true,
         maxlength: DBConstants.EmailMaxLength,
         unique: true,
+        lowecase: true,
     },
     password: {
         type: String,

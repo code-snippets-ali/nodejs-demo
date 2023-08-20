@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../serviceobjects/Utilities/logger";
-import { APIError } from "../serviceobjects/Error";
+import { APIError, HttpStatusCode } from "../serviceobjects/Error";
 
 module.exports = function (
     error: Error,
@@ -8,17 +8,31 @@ module.exports = function (
     res: Response,
     next: NextFunction
 ) {
+    let statusCode = HttpStatusCode.INTERNAL_SERVER;
+    let message =
+        "There is some issue in our service. Please try later or contact support";
+
     if (error instanceof APIError) {
-        res.status(error.statusCode).send({
-            success: false,
-            message: error.message,
-        });
+        statusCode = error.statusCode;
+        message = error.message;
+    } else if (error.name === "CastError") {
+        const apiError = handleCastError(error);
+        statusCode = apiError.statusCode;
+        message = apiError.message;
+    } else if ((error as any).code == 11000) {
+        const apiError = handleDuplicateDBField(error);
+        statusCode = apiError.statusCode;
+        message = apiError.message;
+    } else if (error.name === "ValidationError") {
+        const apiError = handleValidationErrorDB(error);
+        statusCode = apiError.statusCode;
+        message = apiError.message;
+    }
+    console.log(`Environment is ${process.env.NODE_ENV}`);
+    if (process.env.NODE_ENV == "development") {
+        sendErrorDevelopment(error, req, res, statusCode, message);
     } else {
-        res.status(500).send({
-            success: false,
-            message:
-                "There is some issue in our service. Please try later or contact support",
-        });
+        sendErrorProduction(error, req, res, statusCode, message);
     }
     // logger.info(error.message, [req.body, req.url, req.query, req.params]);
 
@@ -35,3 +49,73 @@ module.exports = function (
     console.log(req.body);
     console.log(error.message);
 };
+
+function sendErrorDevelopment(
+    error: Error,
+    req: Request,
+    res: Response,
+    statusCode: HttpStatusCode,
+    message: string
+) {
+    res.status(statusCode).send({
+        success: false,
+        message: message,
+        error: error,
+        stack: error.stack,
+    });
+}
+
+function sendErrorProduction(
+    error: Error,
+    req: Request,
+    res: Response,
+    statusCode: HttpStatusCode,
+    message: string
+) {
+    if (error.name == "CastError") {
+    }
+    res.status(statusCode).send({
+        success: false,
+        message: message,
+    });
+}
+
+function handleCastError(error: any): APIError {
+    const message = `Invalid ${error.path}: ${error.value}`;
+    return new APIError(
+        "Invalid Cast",
+        HttpStatusCode.BAD_REQUEST,
+        message,
+        message,
+        true
+    );
+}
+
+function handleDuplicateDBField(error: any) {
+    const message = `Following fields have duplicated values that already exist in the collection: { ${Object.keys(
+        error.keyValue
+    ).join(",")} }`;
+
+    return new APIError(
+        "Duplicate Unique key",
+        HttpStatusCode.BAD_REQUEST,
+        message,
+        message,
+        true
+    );
+}
+
+function handleValidationErrorDB(error: any) {
+    const validationErrors = Object.values(error.errors).map(
+        (e) => (e as any).message
+    );
+
+    const message = `Invalid input data: ${validationErrors.join(",")}`;
+    return new APIError(
+        "Validation Eerror",
+        HttpStatusCode.BAD_REQUEST,
+        message,
+        message,
+        true
+    );
+}

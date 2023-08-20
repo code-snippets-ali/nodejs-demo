@@ -10,6 +10,7 @@ function auth(req: Request, res: Response, next: Function) {
         return res.status(HttpStatusCode.BAD_REQUEST).send({
             success: false,
             message: "Access denied. Please provide an access token",
+            statusCode: HttpStatusCode.UNAUTHORIZED,
         });
     }
     try {
@@ -18,7 +19,11 @@ function auth(req: Request, res: Response, next: Function) {
         next();
     } catch (ex) {
         console.log(ex);
-        res.status(HttpStatusCode.UNAUTHORIZED).send("Invalid token");
+        res.status(HttpStatusCode.UNAUTHORIZED).send({
+            success: false,
+            message: "The token you've provided appears to be invalid.",
+            statusCode: HttpStatusCode.UNAUTHORIZED,
+        });
     }
 }
 

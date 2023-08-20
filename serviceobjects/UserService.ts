@@ -21,78 +21,58 @@ export class UserService {
     constructor() {}
 
     async me(id: string): Promise<IUser> {
-        try {
-            const user = await User.findById(id);
-            if (!user) {
-                const response: IUser = {
-                    success: false,
-                    message: "There is no profile for this user.",
-                    statusCode: HttpStatusCode.NOT_FOUND,
-                };
-                return response;
-            }
+        const user = await User.findById(id);
+        if (!user) {
             const response: IUser = {
-                success: true,
-                statusCode: 200,
-                id: user.id,
-                name: user.name,
-                phone: user.phone,
-                gender: user.gender,
-                houseNumber: user.houseNumber,
-                streetNumber: user.streetNumber,
-                streetName: user.streetName,
-                city: user.city,
-                state: user.state,
-                country: user.country,
+                success: false,
+                message: "There is no profile for this user.",
+                statusCode: HttpStatusCode.NOT_FOUND,
             };
             return response;
-        } catch (error: any) {
-            throw new APIError(
-                "Server Error",
-                HttpStatusCode.INTERNAL_SERVER,
-                error.message,
-                "This is message for user",
-                true
-            );
         }
+        const response: IUser = {
+            success: true,
+            statusCode: 200,
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            gender: user.gender,
+            houseNumber: user.houseNumber,
+            streetNumber: user.streetNumber,
+            streetName: user.streetName,
+            city: user.city,
+            state: user.state,
+            country: user.country,
+        };
+        return response;
     }
 
     async updateProfile(requestBody: any): Promise<IResponse> {
-        try {
-            const params: IUser = requestBody;
+        const params: IUser = requestBody;
+        const { error } = this.validateProfileUpdate(params);
 
-            const { error } = this.validateProfileUpdate(params);
-            if (error) {
-                return {
-                    success: false,
-                    statusCode: HttpStatusCode.BAD_REQUEST,
-                    message: error.details[0].message,
-                };
-            }
-            params.id = requestBody.user._id;
-            const profile = await User.findById(params.id);
-            if (!profile) {
-                return {
-                    success: false,
-                    statusCode: HttpStatusCode.NOT_FOUND,
-                    message: "User not found",
-                };
-            }
-            profile.set(params);
-            const result = profile.save();
+        if (error) {
             return {
-                success: true,
-                statusCode: HttpStatusCode.UPDATED,
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                message: error.details[0].message,
             };
-        } catch (error: any) {
-            throw new APIError(
-                "Server Error",
-                HttpStatusCode.INTERNAL_SERVER,
-                error.message,
-                "This is message for user",
-                true
-            );
         }
+        params.id = requestBody.user._id;
+        const profile = await User.findById(params.id);
+        if (!profile) {
+            return {
+                success: false,
+                statusCode: HttpStatusCode.NOT_FOUND,
+                message: "User not found",
+            };
+        }
+        profile.set(params);
+        const result = profile.save();
+        return {
+            success: true,
+            statusCode: HttpStatusCode.UPDATED,
+        };
     }
 
     validateProfileUpdate(req: IUser): any {
