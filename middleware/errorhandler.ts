@@ -11,20 +11,19 @@ module.exports = function (
     let statusCode = HttpStatusCode.INTERNAL_SERVER;
     let message =
         "There is some issue in our service. Please try later or contact support";
+    let apiError: APIError | undefined;
 
     if (error instanceof APIError) {
-        statusCode = error.statusCode;
-        message = error.message;
+        apiError = error;
     } else if (error.name === "CastError") {
-        const apiError = handleCastError(error);
-        statusCode = apiError.statusCode;
-        message = apiError.message;
+        apiError = handleCastError(error);
     } else if ((error as any).code == 11000) {
-        const apiError = handleDuplicateDBField(error);
-        statusCode = apiError.statusCode;
-        message = apiError.message;
+        apiError = handleDuplicateDBField(error);
     } else if (error.name === "ValidationError") {
-        const apiError = handleValidationErrorDB(error);
+        apiError = handleValidationErrorDB(error);
+    }
+
+    if (apiError) {
         statusCode = apiError.statusCode;
         message = apiError.message;
     }
