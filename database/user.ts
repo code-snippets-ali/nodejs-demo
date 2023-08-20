@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
     state: String,
     country: String,
 
+    email: {
+        type: String,
+        unique: true,
+        lowercase: true,
+    },
     doctor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Doctor",
