@@ -15,6 +15,10 @@ module.exports = function (
     if (error instanceof APIError) {
         statusCode = error.statusCode;
         message = error.message;
+    } else if (error.name === "CastError") {
+        const apiError = handleCastError(error);
+        statusCode = apiError.statusCode;
+        message = apiError.message;
     }
     console.log(`ENvironment is ${process.env.NODE_ENV}`);
     if (process.env.NODE_ENV == "development") {
@@ -47,7 +51,7 @@ const sendErrorDevelopment = (
 ) => {
     res.status(statusCode).send({
         success: false,
-        message: error.message,
+        message: message,
         error: error,
         stack: error.stack,
     });
@@ -60,8 +64,21 @@ const sendErrorProduction = (
     statusCode: HttpStatusCode,
     message: string
 ) => {
+    if (error.name == "CastError") {
+    }
     res.status(statusCode).send({
         success: false,
         message: message,
     });
 };
+
+function handleCastError(error: any): APIError {
+    const message = `Invalid ${error.path}: ${error.value}`;
+    return new APIError(
+        "Invalid Cast",
+        HttpStatusCode.BAD_REQUEST,
+        "",
+        message,
+        true
+    );
+}
