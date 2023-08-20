@@ -146,14 +146,14 @@ export class AuthenticationService {
         const authenticated = await Authenticate.findOne({
             email: params.email,
         });
-        // if (authenticated) {
-        //     const response: IAuthenticationResponse = {
-        //         message: "User already exist. Please sign in",
-        //         success: false,
-        //         statusCode: HttpStatusCode.BAD_REQUEST,
-        //     };
-        //     return response;
-        // }
+        if (authenticated) {
+            const response: IAuthenticationResponse = {
+                message: "User already exist. Please sign in",
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+            };
+            return response;
+        }
 
         const salt = await bcrypt.genSalt(12);
         const hash = await bcrypt.hash(params.password, salt);
