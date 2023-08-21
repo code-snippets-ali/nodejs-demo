@@ -6,10 +6,18 @@ const databaseLog = require("debug")("app:db");
 const morgan = require("morgan");
 
 //Middleware
-require("./startup/unhandledExceptions")();
+
 require("./startup/config")();
 require("./startup/db")();
-require("./startup/routes")();
+const app = require("./startup/routes");
+
+const port = process.env.PORT || 8182;
+
+const server = app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+});
+require("./startup/unhandledExceptions")(server);
+
 // throw new Error("System failed to launch");
 // const p = Promise.reject(new Error("This is exception for promise rejection"));
 // p.then(() => console.log("Promise completed"));

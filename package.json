@@ -4,9 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "tsc & node dist/index.js",
-        "start:dev": "nodemon index.ts",
-        "debug": "ndb index.ts"
+        "start": "tsc & node dist/server.js",
+        "start:dev": "nodemon server.ts",
+        "debug": "ndb server.ts"
     },
     "author": "",
     "license": "ISC",
