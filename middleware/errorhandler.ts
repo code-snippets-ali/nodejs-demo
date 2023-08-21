@@ -26,6 +26,17 @@ module.exports = function (
     if (apiError) {
         statusCode = apiError.statusCode;
         message = apiError.message;
+    } else {
+        logger.error(error.message, {
+            metadata: {
+                Type: "Handled UnExpected Exception",
+                Body: req.body,
+                URL: req.url,
+                Query: req.query,
+                Parameters: req.params,
+                Method: req.method,
+            },
+        });
     }
     console.log(`Environment is ${process.env.NODE_ENV}`);
     if (process.env.NODE_ENV == "development") {
@@ -35,16 +46,6 @@ module.exports = function (
     }
     // logger.info(error.message, [req.body, req.url, req.query, req.params]);
 
-    logger.error(error.message, {
-        metadata: {
-            Type: "Handled Exception",
-            Body: req.body,
-            URL: req.url,
-            Query: req.query,
-            Parameters: req.params,
-            Method: req.method,
-        },
-    });
     console.log(req.body);
     console.log(error.message);
 };
@@ -71,8 +72,6 @@ function sendErrorProduction(
     statusCode: HttpStatusCode,
     message: string
 ) {
-    if (error.name == "CastError") {
-    }
     res.status(statusCode).send({
         success: false,
         message: message,

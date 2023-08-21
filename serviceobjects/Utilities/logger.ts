@@ -33,6 +33,14 @@ class LoggerService {
             })
         );
     }
+    error(message: string, error: any) {
+        this.logger.error(message, error);
+    }
+    info(message: string, error: any) {
+        this.logger.info(message, error);
+    }
+    warn(message: string, error: any) {
+        this.logger.warn(message, error);
+    }
 }
-const service = new LoggerService();
-export const logger = service.logger;
+export const logger = new LoggerService();
