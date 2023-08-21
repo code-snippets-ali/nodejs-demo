@@ -14,7 +14,7 @@ module.exports = function (server: any) {
     process.on("unhandledRejection", (ex: any) => {
         console.log("Here is uncaught exception");
         logger.error(ex.message, {
-            metadata: { Type: "Unhandled Exception" },
+            metadata: { Type: "Unhandled Rejection", ex },
         });
         server.close(() => {
             console.log("Exit Process");

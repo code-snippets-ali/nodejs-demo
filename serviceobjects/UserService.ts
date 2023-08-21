@@ -22,6 +22,7 @@ export class UserService {
 
     async me(id: string): Promise<IUser> {
         const user = await User.findById(id);
+
         if (!user) {
             const response: IUser = {
                 success: false,
