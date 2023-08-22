@@ -5,10 +5,16 @@ import { APIError } from "../serviceobjects/APIError";
 import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
 const jwt = require("jsonwebtoken");
 const { get } = require("config");
-const xAuthToken = "x-auth-token";
+const Authorization = "Authorization";
 
 function auth(req: Request, res: Response, next: Function) {
-    const token = req.header(xAuthToken);
+    let token;
+    if (
+        req.headers.authorization &&
+        req.headers.authorization?.startsWith("Bearer")
+    ) {
+        token = req.headers.authorization.split(" ")[1];
+    }
     if (!token) {
         throw new APIError(
             "Access Token Not Provided",
