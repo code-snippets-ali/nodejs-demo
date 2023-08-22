@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../serviceobjects/Utilities/logger";
-import { APIError, HttpStatusCode } from "../serviceobjects/APIError";
+import { APIError } from "../serviceobjects/APIError";
+import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 
 module.exports = function (
     error: Error,

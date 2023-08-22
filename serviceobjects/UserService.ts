@@ -1,8 +1,9 @@
 const { User } = require("../database/user");
 import Joi from "joi";
-import { ResultError, APIError, HttpStatusCode } from "./APIError";
+import { APIError } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 
 export interface IUser extends IResponse {
     id?: String;

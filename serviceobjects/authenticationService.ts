@@ -4,7 +4,8 @@ const Joi = require("joi");
 const bcrypt = require("bcrypt");
 import { DBConstants } from "../database/DBConstants";
 
-import { ResultError, APIError, HttpStatusCode } from "./APIError";
+import { APIError } from "./APIError";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
@@ -187,7 +188,7 @@ export class AuthenticationService {
 
     generateToken(userId: string, access_level: number): string {
         const token = jwt.sign(
-            { _id: userId, isAdmin: access_level },
+            { _id: userId, access_level: access_level },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );
@@ -201,6 +202,7 @@ export class AuthenticationService {
             { expiresIn: expires_RefreshToken }
         );
         return refresh_token;
+        HttpStatusCode;
     }
 
     //#endregion

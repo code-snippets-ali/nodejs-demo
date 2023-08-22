@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { APIError, HttpStatusCode } from "../serviceobjects/APIError";
+import { APIError } from "../serviceobjects/APIError";
+import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 
 const unhandledRoute = function (
     req: Request,

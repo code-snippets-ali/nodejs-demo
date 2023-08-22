@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
-import { HttpStatusCode } from "../serviceobjects/APIError";
+import { APIError } from "../serviceobjects/APIError";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
+import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 const jwt = require("jsonwebtoken");
 const { get } = require("config");
+const xAuthToken = "x-auth-token";
 
 function auth(req: Request, res: Response, next: Function) {
-    const token = req.header("x-auth-token");
+    const token = req.header(xAuthToken);
     if (!token) {
         return res.status(HttpStatusCode.BAD_REQUEST).send({
             success: false,

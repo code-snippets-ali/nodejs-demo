@@ -1,5 +1,6 @@
 const Doctor = require("../database/doctor");
-import { ResultError, APIError, HttpStatusCode } from "./APIError";
+import { APIError } from "./APIError";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 const Joi = require("joi");
 export interface IDoctor {
     userId: String;
