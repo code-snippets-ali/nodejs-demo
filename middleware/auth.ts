@@ -29,11 +29,16 @@ function auth(req: Request, res: Response, next: Function) {
         appConfig(Settings.JWTPrivateKey),
         (error: any, decoded: any) => {
             if (error) {
+                let message =
+                    "The token you've provided appears to be invalid.";
+                if (error.name === "TokenExpiredError") {
+                    message = "Your token has expired.";
+                }
                 throw new APIError(
                     "Invalid Access Token",
                     HttpStatusCode.UNAUTHORIZED,
                     "",
-                    "The token you've provided appears to be invalid."
+                    message
                 );
             }
             req.body.user = decoded;
