@@ -68,12 +68,12 @@ export class AuthenticationService {
         const user = await User.findOne({ _id: params._id });
 
         if (!user) {
-            const response: IAuthenticationResponse = {
-                success: false,
-                message: "Unable to refresh token. Please sign in again",
-                statusCode: HttpStatusCode.BAD_REQUEST,
-            };
-            return response;
+            throw new APIError(
+                "Refresh Token User does not exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "Unable to refresh token. Please sign in again"
+            );
         }
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(user._id, user.access_level),
@@ -138,22 +138,23 @@ export class AuthenticationService {
     ): Promise<IAuthenticationResponse> {
         const { error } = this.validateCreate(params);
         if (error) {
-            return {
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                message: error.details[0].message,
-            };
+            throw new APIError(
+                "Registration Validation Failed",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                error.details[0].message
+            );
         }
         const authenticated = await Authenticate.findOne({
             email: params.email,
         });
         if (authenticated) {
-            const response: IAuthenticationResponse = {
-                message: "User already exist. Please sign in",
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-            };
-            return response;
+            throw new APIError(
+                "Registration User Already Exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "User already exist. Please sign in"
+            );
         }
 
         const salt = await bcrypt.genSalt(12);
