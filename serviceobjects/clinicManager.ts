@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { IDoctor } from "./doctorsService";
-import { APIError, HttpStatusCode } from "./Error";
+import { APIError, HttpStatusCode } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
 const { Clinic, clinicSchema } = require("./clinic.js");
 

@@ -32,7 +32,7 @@ export class AppError extends Error {
         userMessage: string,
         isOperational: boolean
     ) {
-        super(description);
+        super(userMessage);
         Object.setPrototypeOf(this, new.target.prototype);
 
         this.name = name;

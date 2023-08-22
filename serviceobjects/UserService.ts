@@ -1,6 +1,6 @@
 const { User } = require("../database/user");
 import Joi from "joi";
-import { ResultError, APIError, HttpStatusCode } from "./Error";
+import { ResultError, APIError, HttpStatusCode } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
 

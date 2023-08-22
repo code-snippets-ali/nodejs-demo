@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema({
     access_level: {
         type: Number,
         required: true,
-        default: 6,
+        default: 600,
+        enum: [0, 100, 200, 300, 400, 500, 600],
+        //0  = Root Admin, 100 = Admin, 200 = Clinic Owner, 300 = Clinic Manager
+        // 400 = Doctor, 500 = Patient
     },
     phone: String,
     gender: String,

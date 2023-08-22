@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { UserService } from "../serviceobjects/UserService";
-import { APIError, HttpStatusCode } from "../serviceobjects/Error";
+import { APIError, HttpStatusCode } from "../serviceobjects/APIError";
 
 export async function getProfile(
     req: Request,

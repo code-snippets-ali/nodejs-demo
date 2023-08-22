@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../serviceobjects/Utilities/logger";
-import { APIError, HttpStatusCode } from "../serviceobjects/Error";
+import { APIError, HttpStatusCode } from "../serviceobjects/APIError";
 
 module.exports = function (
     error: Error,
@@ -59,6 +59,7 @@ function sendErrorDevelopment(
 ) {
     res.status(statusCode).send({
         success: false,
+        statusCode: statusCode,
         message: message,
         error: error,
         stack: error.stack,
@@ -74,6 +75,7 @@ function sendErrorProduction(
 ) {
     res.status(statusCode).send({
         success: false,
+        statusCode: statusCode,
         message: message,
     });
 }

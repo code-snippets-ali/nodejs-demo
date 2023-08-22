@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { HttpStatusCode } from "../serviceobjects/Error";
+import { HttpStatusCode } from "../serviceobjects/APIError";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 const jwt = require("jsonwebtoken");
 const { get } = require("config");
