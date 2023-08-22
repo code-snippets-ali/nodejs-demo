@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { APIError } from "../serviceobjects/APIError";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
+import { APIError } from "../serviceobjects/APIError";
+import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
 const jwt = require("jsonwebtoken");
 const { get } = require("config");
 const xAuthToken = "x-auth-token";
@@ -9,33 +10,47 @@ const xAuthToken = "x-auth-token";
 function auth(req: Request, res: Response, next: Function) {
     const token = req.header(xAuthToken);
     if (!token) {
-        return res.status(HttpStatusCode.BAD_REQUEST).send({
-            success: false,
-            message: "Access denied. Please provide an access token",
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-        });
+        throw new APIError(
+            "Access Token Not Provided",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            "Access denied. Please provide an access token"
+        );
     }
     try {
         const decoded = jwt.verify(token, appConfig(Settings.JWTPrivateKey));
         req.body.user = decoded;
         next();
     } catch (ex) {
-        console.log(ex);
-        res.status(HttpStatusCode.UNAUTHORIZED).send({
-            success: false,
-            message: "The token you've provided appears to be invalid.",
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-        });
+        throw new APIError(
+            "Invalid Access Token",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            "The token you've provided appears to be invalid."
+        );
     }
 }
 
 function admin(req: Request, res: Response, next: Function) {
-    if (!req.body.user.isAdmin) {
-        return res.status(HttpStatusCode.UNAUTHORIZED).send({
-            success: false,
-            message: "Access denied. You are not authorized to access this api",
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-        });
+    if (req.body.user.access_level !== AccessLevel.Admin) {
+        throw new APIError(
+            "Token Access is not Admin",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            "Access denied. You are not authorized to access this api"
+        );
+    }
+    next();
+}
+
+function atleastAdmin(req: Request, res: Response, next: Function) {
+    if (req.body.user.access_level > AccessLevel.Admin) {
+        throw new APIError(
+            "Token Access is not Admin",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            "Access denied. You are not authorized to access this api"
+        );
     }
     next();
 }
@@ -43,12 +58,12 @@ function admin(req: Request, res: Response, next: Function) {
 function refresh(req: Request, res: Response, next: Function) {
     const refreshToken = req.body.refreshToken;
     if (!refreshToken) {
-        return res.status(HttpStatusCode.BAD_REQUEST).send({
-            success: false,
-            message:
-                "Access denied. Please provide the refresh token to proceed",
-            statusCode: HttpStatusCode.BAD_REQUEST,
-        });
+        throw new APIError(
+            "Refresh Token Not Provided",
+            HttpStatusCode.BAD_REQUEST,
+            "",
+            "Access denied. Please provide the refresh token to proceed"
+        );
     }
 
     try {
@@ -59,12 +74,12 @@ function refresh(req: Request, res: Response, next: Function) {
         req.body.user = decoded;
         next();
     } catch (ex) {
-        console.log(ex);
-        res.status(HttpStatusCode.BAD_REQUEST).send({
-            success: false,
-            message: "Access denied. Refresh token is invalid",
-            statusCode: HttpStatusCode.BAD_REQUEST,
-        });
+        throw new APIError(
+            "Refresh Token Not Provided",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            "Access denied. Refresh token is invalid"
+        );
     }
 }
 
