@@ -23,18 +23,23 @@ function auth(req: Request, res: Response, next: Function) {
             "Access denied. Please provide an access token"
         );
     }
-    try {
-        const decoded = jwt.verify(token, appConfig(Settings.JWTPrivateKey));
-        req.body.user = decoded;
-        next();
-    } catch (ex) {
-        throw new APIError(
-            "Invalid Access Token",
-            HttpStatusCode.UNAUTHORIZED,
-            "",
-            "The token you've provided appears to be invalid."
-        );
-    }
+
+    jwt.verify(
+        token,
+        appConfig(Settings.JWTPrivateKey),
+        (error: any, decoded: any) => {
+            if (error) {
+                throw new APIError(
+                    "Invalid Access Token",
+                    HttpStatusCode.UNAUTHORIZED,
+                    "",
+                    "The token you've provided appears to be invalid."
+                );
+            }
+            req.body.user = decoded;
+            next();
+        }
+    );
 }
 
 function admin(req: Request, res: Response, next: Function) {
