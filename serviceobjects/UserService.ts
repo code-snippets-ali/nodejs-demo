@@ -79,6 +79,13 @@ export class UserService {
         };
     }
 
+    async isActiveUser(id: string): Promise<boolean> {
+        const user = await User.findById(id).select("_id isActive");
+        if (user && user.isActive) {
+            return true;
+        }
+        return false;
+    }
     validateProfileUpdate(req: IUser): any {
         const schema = Joi.object({
             name: Joi.string()

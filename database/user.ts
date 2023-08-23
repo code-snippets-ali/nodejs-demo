@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema({
     city: String,
     state: String,
     country: String,
-
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
     email: {
         type: String,
         unique: true,

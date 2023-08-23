@@ -3,11 +3,11 @@ import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../serviceobjects/APIError";
 import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
+import { UserService } from "../serviceobjects/UserService";
 const jwt = require("jsonwebtoken");
-const { get } = require("config");
-const Authorization = "Authorization";
+const { promisify } = require("util");
 
-function auth(req: Request, res: Response, next: Function) {
+export async function auth(req: Request, res: Response, next: Function) {
     let token;
     if (
         req.headers.authorization &&
@@ -16,35 +16,57 @@ function auth(req: Request, res: Response, next: Function) {
         token = req.headers.authorization.split(" ")[1];
     }
     if (!token) {
-        throw new APIError(
+        const apiError = new APIError(
             "Access Token Not Provided",
             HttpStatusCode.UNAUTHORIZED,
             "",
             "Access denied. Please provide an access token"
         );
+        next(apiError);
+        return;
     }
+    try {
+        const decoded = await promisify(jwt.verify)(
+            token,
+            appConfig(Settings.JWTPrivateKey)
+        );
+        const id = decoded._id;
+        const service = new UserService();
+        console.log(`decoded = ${JSON.stringify(decoded)}`);
+        const isActive = await service.isActiveUser(id);
 
-    jwt.verify(
-        token,
-        appConfig(Settings.JWTPrivateKey),
-        (error: any, decoded: any) => {
-            if (error) {
-                let message =
-                    "The token you've provided appears to be invalid.";
-                if (error.name === "TokenExpiredError") {
-                    message = "Your token has expired.";
-                }
-                throw new APIError(
-                    "Invalid Access Token",
-                    HttpStatusCode.UNAUTHORIZED,
-                    "",
-                    message
-                );
-            }
-            req.body.user = decoded;
-            next();
+        if (!isActive) {
+            throw new APIError(
+                "No Active User",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "This user no longer has an active account"
+            );
         }
-    );
+        req.body.user = decoded;
+        next();
+    } catch (ex: any) {
+        const name = ex.name ?? "";
+        let message = "";
+        switch (name) {
+            case "TokenExpiredError":
+                message = "Your token has expired.";
+                break;
+            case "JsonWebTokenError":
+                message = "The token you've provided appears to be invalid.";
+                break;
+            default:
+                next(ex);
+                return;
+        }
+        const apiError = new APIError(
+            "Invalid Access Token",
+            HttpStatusCode.UNAUTHORIZED,
+            "",
+            message
+        );
+        next(apiError);
+    }
 }
 
 function admin(req: Request, res: Response, next: Function) {
@@ -99,6 +121,6 @@ function refresh(req: Request, res: Response, next: Function) {
     }
 }
 
-module.exports.auth = auth;
+// module.exports.auth = auth;
 module.exports.admin = admin;
 module.exports.refresh = refresh;
