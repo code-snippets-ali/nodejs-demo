@@ -1,7 +1,8 @@
 import Joi from "joi";
 import { IDoctor } from "./doctorsService";
-import { APIError, HttpStatusCode } from "./APIError";
+import { APIError } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 const { Clinic, clinicSchema } = require("./clinic.js");
 
 export interface IClinic extends IResponse {
