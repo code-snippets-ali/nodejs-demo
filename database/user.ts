@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
     },
+    passwordUpdatedAt: {
+        type: Date,
+        default: Date.now,
+    },
     doctor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Doctor",

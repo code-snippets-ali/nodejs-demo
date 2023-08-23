@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
 export async function auth(req: Request, res: Response, next: Function) {
+    //#region 1. Check If user has provided token
     let token;
     if (
         req.headers.authorization &&
@@ -25,27 +26,26 @@ export async function auth(req: Request, res: Response, next: Function) {
         next(apiError);
         return;
     }
+    //#endregion
+
     try {
+        //#region 2. Check if provided token is a valid token
         const decoded = await promisify(jwt.verify)(
             token,
             appConfig(Settings.JWTPrivateKey)
         );
-        const id = decoded._id;
-        const service = new UserService();
-        console.log(`decoded = ${JSON.stringify(decoded)}`);
-        const isActive = await service.isActiveUser(id);
+        //#endregion
 
-        if (!isActive) {
-            throw new APIError(
-                "No Active User",
-                HttpStatusCode.UNAUTHORIZED,
-                "",
-                "This user no longer has an active account"
-            );
-        }
+        //#region 3. Test if user is account is still active and Have valid passwod
+        await new UserService().isActiveUserWithSamePassword(
+            decoded._id,
+            decoded.iat
+        );
+        //#endregion
         req.body.user = decoded;
         next();
     } catch (ex: any) {
+        //#region Errors if something has gone wrong
         const name = ex.name ?? "";
         let message = "";
         switch (name) {
@@ -66,6 +66,7 @@ export async function auth(req: Request, res: Response, next: Function) {
             message
         );
         next(apiError);
+        //#endregion
     }
 }
 
@@ -93,15 +94,17 @@ function atleastAdmin(req: Request, res: Response, next: Function) {
     next();
 }
 
-function refresh(req: Request, res: Response, next: Function) {
+async function refresh(req: Request, res: Response, next: Function) {
     const refreshToken = req.body.refreshToken;
     if (!refreshToken) {
-        throw new APIError(
+        const apiError = new APIError(
             "Refresh Token Not Provided",
             HttpStatusCode.BAD_REQUEST,
             "",
             "Access denied. Please provide the refresh token to proceed"
         );
+        next(apiError);
+        return;
     }
 
     try {
@@ -110,14 +113,32 @@ function refresh(req: Request, res: Response, next: Function) {
             appConfig(Settings.JWTPrivateKey)
         );
         req.body.user = decoded;
+        await new UserService().isActiveUserWithSamePassword(
+            decoded._id,
+            decoded.iat
+        );
         next();
-    } catch (ex) {
-        throw new APIError(
-            "Refresh Token Not Provided",
+    } catch (ex: any) {
+        const name = ex.name ?? "";
+        let message = "";
+        switch (name) {
+            case "TokenExpiredError":
+                message = "Your token has expired.";
+                break;
+            case "JsonWebTokenError":
+                message = "The token you've provided appears to be invalid.";
+                break;
+            default:
+                next(ex);
+                return;
+        }
+        const apiError = new APIError(
+            "Invalid Access Token",
             HttpStatusCode.UNAUTHORIZED,
             "",
-            "Access denied. Refresh token is invalid"
+            message
         );
+        next(apiError);
     }
 }
 

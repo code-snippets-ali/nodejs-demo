@@ -79,11 +79,38 @@ export class UserService {
         };
     }
 
-    async isActiveUser(id: string): Promise<boolean> {
-        const user = await User.findById(id).select("_id isActive");
-        if (user && user.isActive) {
-            return true;
+    async isActiveUserWithSamePassword(
+        id: string,
+        tokenTimeStamp: number
+    ): Promise<boolean> {
+        const user = await User.findById(id).select(
+            "_id isActive passwordUpdatedAt"
+        );
+        if (!user || !user.isActive) {
+            throw new APIError(
+                "Inactive User",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "This user no longer has an active account"
+            );
         }
+
+        console.log(user.passwordUpdatedAt);
+        const passwordTimeStamp: number = Math.floor(
+            user.passwordUpdatedAt.getTime() / 1000
+        );
+        if (passwordTimeStamp > tokenTimeStamp) {
+            throw new APIError(
+                "Password Changed",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "The user has changed his password. Please sign in again"
+            );
+        }
+        return true;
+    }
+
+    async hasPasswordChangedAfter(time: number): Promise<boolean> {
         return false;
     }
     validateProfileUpdate(req: IUser): any {
