@@ -1,15 +1,5 @@
 //https://www.toptal.com/nodejs/node-js-error-handling
-
-export enum HttpStatusCode {
-    OK = 200,
-    CREATED = 201,
-    UPDATED = 204,
-    UNAUTHORIZED = 401,
-    BAD_REQUEST = 400,
-    NOT_FOUND = 404,
-    INTERNAL_SERVER = 500,
-}
-
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 export class ResultError {
     statusCode: Number;
     message: String;
@@ -19,9 +9,9 @@ export class ResultError {
     }
 }
 
-export class BaseError extends Error {
+export class AppError extends Error {
     public readonly name: string;
-    public readonly httpCode: HttpStatusCode;
+    public readonly statusCode: HttpStatusCode;
     public readonly userMessage: string;
     public readonly isOperational: boolean;
 
@@ -32,11 +22,11 @@ export class BaseError extends Error {
         userMessage: string,
         isOperational: boolean
     ) {
-        super(description);
+        super(userMessage);
         Object.setPrototypeOf(this, new.target.prototype);
 
         this.name = name;
-        this.httpCode = httpCode;
+        this.statusCode = httpCode;
         this.userMessage = userMessage;
         this.isOperational = isOperational;
 
@@ -45,14 +35,14 @@ export class BaseError extends Error {
 }
 
 //free to extend the BaseError
-export class APIError extends BaseError {
+export class APIError extends AppError {
     constructor(
         name: string,
-        httpCode = HttpStatusCode.INTERNAL_SERVER,
+        statusCode = HttpStatusCode.INTERNAL_SERVER,
         description = "internal server error",
         userMessage = "There is some error in service",
         isOperational = true
     ) {
-        super(name, httpCode, description, userMessage, isOperational);
+        super(name, statusCode, description, userMessage, isOperational);
     }
 }
