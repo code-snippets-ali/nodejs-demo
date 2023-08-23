@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema({
     access_level: {
         type: Number,
         required: true,
-        default: 6,
+        default: 500,
+        enum: [0, 100, 200, 300, 400, 500],
+        //0  = Root Admin, 100 = Admin, 200 = Clinic Owner, 300 = Clinic Manager
+        // 400 = Doctor, 500 = Patient
     },
     phone: String,
     gender: String,
@@ -17,11 +20,18 @@ const userSchema = new mongoose.Schema({
     city: String,
     state: String,
     country: String,
-
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
     email: {
         type: String,
         unique: true,
         lowercase: true,
+    },
+    passwordUpdatedAt: {
+        type: Date,
+        default: Date.now,
     },
     doctor: {
         type: mongoose.Schema.Types.ObjectId,

@@ -1,15 +1,5 @@
 //https://www.toptal.com/nodejs/node-js-error-handling
-
-export enum HttpStatusCode {
-    OK = 200,
-    CREATED = 201,
-    UPDATED = 204,
-    UNAUTHORIZED = 401,
-    BAD_REQUEST = 400,
-    NOT_FOUND = 404,
-    INTERNAL_SERVER = 500,
-}
-
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 export class ResultError {
     statusCode: Number;
     message: String;
@@ -32,7 +22,7 @@ export class AppError extends Error {
         userMessage: string,
         isOperational: boolean
     ) {
-        super(description);
+        super(userMessage);
         Object.setPrototypeOf(this, new.target.prototype);
 
         this.name = name;

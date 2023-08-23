@@ -1,8 +1,9 @@
 const { User } = require("../database/user");
 import Joi from "joi";
-import { ResultError, APIError, HttpStatusCode } from "./Error";
+import { APIError } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 
 export interface IUser extends IResponse {
     id?: String;
@@ -24,12 +25,12 @@ export class UserService {
         const user = await User.findById(id);
 
         if (!user) {
-            const response: IUser = {
-                success: false,
-                message: "There is no profile for this user.",
-                statusCode: HttpStatusCode.NOT_FOUND,
-            };
-            return response;
+            throw new APIError(
+                "User Profile Does Not Exist",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "There is no profile for this user."
+            );
         }
         const response: IUser = {
             success: true,
@@ -53,29 +54,65 @@ export class UserService {
         const { error } = this.validateProfileUpdate(params);
 
         if (error) {
-            return {
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                message: error.details[0].message,
-            };
+            throw new APIError(
+                "User Profile Does Not Exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                error.details[0].message
+            );
         }
         params.id = requestBody.user._id;
         const profile = await User.findById(params.id);
         if (!profile) {
-            return {
-                success: false,
-                statusCode: HttpStatusCode.NOT_FOUND,
-                message: "User not found",
-            };
+            throw new APIError(
+                "User Profile Does Not Exist",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "There is no profile for this user."
+            );
         }
         profile.set(params);
-        const result = profile.save();
+
         return {
             success: true,
             statusCode: HttpStatusCode.UPDATED,
         };
     }
 
+    async isActiveUserWithSamePassword(
+        id: string,
+        tokenTimeStamp: number
+    ): Promise<boolean> {
+        const user = await User.findById(id).select(
+            "_id isActive passwordUpdatedAt"
+        );
+        if (!user || !user.isActive) {
+            throw new APIError(
+                "Inactive User",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "This user no longer has an active account"
+            );
+        }
+
+        console.log(user.passwordUpdatedAt);
+        const passwordTimeStamp: number = Math.floor(
+            user.passwordUpdatedAt.getTime() / 1000
+        );
+        if (passwordTimeStamp > tokenTimeStamp) {
+            throw new APIError(
+                "Password Changed",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "The user has changed his password. Please sign in again"
+            );
+        }
+        return true;
+    }
+
+    async hasPasswordChangedAfter(time: number): Promise<boolean> {
+        return false;
+    }
     validateProfileUpdate(req: IUser): any {
         const schema = Joi.object({
             name: Joi.string()

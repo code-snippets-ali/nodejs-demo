@@ -27,21 +27,28 @@ export async function register(
 }
 
 export async function signin(req: Request, res: Response, next: NextFunction) {
-    const service = new AuthenticationService();
-    const authentication: IAuthenticationResponse = await service.signIn(
-        req.body
-    );
-    res.status(authentication.statusCode)
-        .header("x-auth-token", authentication.accessToken ?? "")
-        .send(authentication);
+    try {
+        const service = new AuthenticationService();
+        const authentication: IAuthenticationResponse = await service.signIn(
+            req.body
+        );
+        res.status(authentication.statusCode)
+            .header("x-auth-token", authentication.accessToken ?? "")
+            .send(authentication);
+    } catch (ex: any) {
+        next(ex);
+    }
 }
 // This is comments
 export async function token(req: Request, res: Response, next: NextFunction) {
-    const service = new AuthenticationService();
-    const authentication: IAuthenticationResponse = await service.refreshToken(
-        req.body.user
-    );
-    res.header("x-auth-token", authentication.accessToken ?? "").send(
-        authentication
-    );
+    try {
+        const service = new AuthenticationService();
+        const authentication: IAuthenticationResponse =
+            await service.refreshToken(req.body.user);
+        res.header("x-auth-token", authentication.accessToken ?? "").send(
+            authentication
+        );
+    } catch (ex: any) {
+        next(ex);
+    }
 }

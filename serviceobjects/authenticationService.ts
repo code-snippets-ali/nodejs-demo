@@ -4,7 +4,8 @@ const Joi = require("joi");
 const bcrypt = require("bcrypt");
 import { DBConstants } from "../database/DBConstants";
 
-import { ResultError, APIError, HttpStatusCode } from "./Error";
+import { APIError } from "./APIError";
+import { HttpStatusCode } from "./enums/HttpStatusCode";
 import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
@@ -53,8 +54,8 @@ export interface ISigninRequest {
 
 export interface IAuthenticationResponse extends IResponse {
     accessToken?: string;
-    refreshToken?: String;
-    expiresIn?: String;
+    refreshToken?: string;
+    expiresIn?: string;
 }
 
 //#endregion
@@ -68,12 +69,12 @@ export class AuthenticationService {
         const user = await User.findOne({ _id: params._id });
 
         if (!user) {
-            const response: IAuthenticationResponse = {
-                success: false,
-                message: "Unable to refresh token. Please sign in again",
-                statusCode: HttpStatusCode.BAD_REQUEST,
-            };
-            return response;
+            throw new APIError(
+                "Refresh Token User does not exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "Unable to refresh token. Please sign in again"
+            );
         }
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(user._id, user.access_level),
@@ -88,11 +89,12 @@ export class AuthenticationService {
     async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
         const { error } = this.validateSignin(params);
         if (error) {
-            return {
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                message: error.details[0].message,
-            };
+            throw new APIError(
+                "Sign in validation",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                error.details[0].message
+            );
         }
 
         let authenticated = await Authenticate.findOne({
@@ -100,24 +102,24 @@ export class AuthenticationService {
         }).populate("user");
 
         if (!authenticated) {
-            const response: IAuthenticationResponse = {
-                success: false,
-                message: "The email you've entered doesn't match any account.",
-                statusCode: HttpStatusCode.NOT_FOUND,
-            };
-            return response;
+            throw new APIError(
+                "Sign in email not registered",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "The email you've entered doesn't match any account."
+            );
         }
         const isValidPassword = await bcrypt.compare(
             params.password,
             authenticated.password
         );
         if (!isValidPassword) {
-            const response: IAuthenticationResponse = {
-                success: false,
-                message: "The password is incorrect.",
-                statusCode: HttpStatusCode.BAD_REQUEST,
-            };
-            return response;
+            throw new APIError(
+                "Sign in password is not correct",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "The password is incorrect."
+            );
         }
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(
@@ -137,22 +139,23 @@ export class AuthenticationService {
     ): Promise<IAuthenticationResponse> {
         const { error } = this.validateCreate(params);
         if (error) {
-            return {
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                message: error.details[0].message,
-            };
+            throw new APIError(
+                "Registration Validation Failed",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                error.details[0].message
+            );
         }
         const authenticated = await Authenticate.findOne({
             email: params.email,
         });
         if (authenticated) {
-            const response: IAuthenticationResponse = {
-                message: "User already exist. Please sign in",
-                success: false,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-            };
-            return response;
+            throw new APIError(
+                "Registration User Already Exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "User already exist. Please sign in"
+            );
         }
 
         const salt = await bcrypt.genSalt(12);
@@ -185,7 +188,7 @@ export class AuthenticationService {
 
     generateToken(userId: string, access_level: number): string {
         const token = jwt.sign(
-            { _id: userId, isAdmin: access_level },
+            { _id: userId, access_level: access_level },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );
@@ -199,6 +202,7 @@ export class AuthenticationService {
             { expiresIn: expires_RefreshToken }
         );
         return refresh_token;
+        HttpStatusCode;
     }
 
     //#endregion
