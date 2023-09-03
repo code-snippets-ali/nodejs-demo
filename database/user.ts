@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    access_levels: {
+    roles: {
         type: [Number],
         required: true,
         default: [500],
