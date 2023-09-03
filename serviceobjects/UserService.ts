@@ -84,7 +84,7 @@ export class UserService {
         tokenTimeStamp: number
     ): Promise<boolean> {
         const user = await User.findById(id).select(
-            "_id isActive passwordUpdatedAt"
+            "_id isActive passwordUpdatedAt access_level"
         );
         if (!user || !user.isActive) {
             throw new APIError(

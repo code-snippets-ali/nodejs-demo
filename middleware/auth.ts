@@ -69,29 +69,38 @@ export async function auth(req: Request, res: Response, next: Function) {
         //#endregion
     }
 }
-
-function admin(req: Request, res: Response, next: Function) {
-    if (req.body.user.access_level !== AccessLevel.Admin) {
-        throw new APIError(
-            "Token Access is not Admin",
-            HttpStatusCode.UNAUTHORIZED,
-            "",
-            "Access denied. You are not authorized to access this api"
-        );
-    }
-    next();
+function requiredAccess(...accessLevels: [AccessLevel]) {
+    return (req: Request, res: Response, next: Function) => {
+        let requestObject = req as any;
+        if (!accessLevels.includes(requestObject.user.access_level)) {
+            const apiError = new APIError(
+                "Invalid Access Token",
+                HttpStatusCode.FORBIDDEN,
+                "",
+                "You donot have permission for this action"
+            );
+            next(apiError);
+            return;
+        }
+        next();
+    };
 }
 
-function atleastAdmin(req: Request, res: Response, next: Function) {
-    if (req.body.user.access_level > AccessLevel.Admin) {
-        throw new APIError(
-            "Token Access is not Admin",
-            HttpStatusCode.UNAUTHORIZED,
-            "",
-            "Access denied. You are not authorized to access this api"
-        );
-    }
-    next();
+function requiredHigherAccessThan(accessLevel: AccessLevel) {
+    return (req: Request, res: Response, next: Function) => {
+        let requestObject = req as any;
+        if (accessLevel >= requestObject.user.access_level) {
+            const apiError = new APIError(
+                "Invalid Access Token",
+                HttpStatusCode.FORBIDDEN,
+                "",
+                "You donot have permission for this action"
+            );
+            next(apiError);
+            return;
+        }
+        next();
+    };
 }
 
 async function refresh(req: Request, res: Response, next: Function) {
@@ -143,5 +152,7 @@ async function refresh(req: Request, res: Response, next: Function) {
 }
 
 // module.exports.auth = auth;
-module.exports.admin = admin;
+module.exports.requiredAccess = requiredAccess;
+module.exports.requiredHigherAccess = requiredHigherAccessThan;
+
 module.exports.refresh = refresh;
