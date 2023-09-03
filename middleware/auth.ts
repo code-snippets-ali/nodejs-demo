@@ -4,6 +4,7 @@ import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../serviceobjects/APIError";
 import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
 import { UserService } from "../serviceobjects/UserService";
+import { Common } from "../serviceobjects/Utilities/Common";
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
@@ -72,7 +73,12 @@ export async function auth(req: Request, res: Response, next: Function) {
 function requiredAccess(...accessLevels: [AccessLevel]) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
-        if (!accessLevels.includes(requestObject.user.access_level)) {
+        if (
+            !Common.hasCommonValue(
+                accessLevels,
+                requestObject.user.access_levels
+            )
+        ) {
             const apiError = new APIError(
                 "Invalid Access Token",
                 HttpStatusCode.FORBIDDEN,
