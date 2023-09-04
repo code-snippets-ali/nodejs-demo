@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../serviceobjects/APIError";
-import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
+import { Role } from "../serviceobjects/enums/Role";
 import { UserService } from "../serviceobjects/UserService";
 import { Common } from "../serviceobjects/Utilities/Common";
 const jwt = require("jsonwebtoken");
@@ -70,7 +70,7 @@ export async function auth(req: Request, res: Response, next: Function) {
         //#endregion
     }
 }
-function requiredAccess(...accessLevels: [AccessLevel]) {
+function requiredAccess(...accessLevels: [Role]) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
         if (
@@ -92,7 +92,7 @@ function requiredAccess(...accessLevels: [AccessLevel]) {
     };
 }
 
-function requiredHigherAccessThan(accessLevel: AccessLevel) {
+function requiredHigherAccessThan(accessLevel: Role) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
         if (accessLevel >= requestObject.user.access_level) {

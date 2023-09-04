@@ -1,4 +1,4 @@
-export enum AccessLevel {
+export enum Role {
     RootAdmin = 0,
     Admin = 100,
     ClinicOwner = 200,
