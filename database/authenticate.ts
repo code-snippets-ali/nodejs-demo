@@ -16,6 +16,8 @@ const authenticateSchema = new Schema({
         minlength: DBConstants.PasswordMinLength,
         maxlength: DBConstants.PasswordHashedMaxLength,
     },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

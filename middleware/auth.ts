@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../serviceobjects/APIError";
@@ -157,8 +157,15 @@ async function refresh(req: Request, res: Response, next: Function) {
     }
 }
 
+async function forgotPassword(req: Request, res: Response, next: Function) {}
+
+async function resetPassword(req: Request, res: Response, next: Function) {}
+
 // module.exports.auth = auth;
 module.exports.requiredAccess = requiredAccess;
 module.exports.requiredHigherAccess = requiredHigherAccessThan;
 
 module.exports.refresh = refresh;
+
+module.exports.forgotPassword = forgotPassword;
+module.exports.resetPassword = resetPassword;

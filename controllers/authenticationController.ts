@@ -52,3 +52,21 @@ export async function token(req: Request, res: Response, next: NextFunction) {
         next(ex);
     }
 }
+
+export async function forgotPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    // Get the user based on Email address
+    try {
+        const service = new AuthenticationService();
+        const response = await service.forgotPassword(req.body.email);
+        res.status(response.statusCode).send(response);
+    } catch (ex: any) {
+        next(ex);
+    }
+
+    //Generate the random reset token
+    //Send it to user email address.
+}
