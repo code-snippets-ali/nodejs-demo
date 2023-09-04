@@ -61,12 +61,16 @@ export async function forgotPassword(
     // Get the user based on Email address
     try {
         const service = new AuthenticationService();
-        const response = await service.forgotPassword(req.body.email);
+        const resetURL = `${req.protocol}://${req.get("host")}/api/v1`;
+        const response = await service.forgotPassword(req.body.email, resetURL);
         res.status(response.statusCode).send(response);
     } catch (ex: any) {
         next(ex);
     }
-
-    //Generate the random reset token
-    //Send it to user email address.
 }
+
+export async function resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {}

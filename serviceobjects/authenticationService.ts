@@ -9,6 +9,7 @@ import { HttpStatusCode } from "./enums/HttpStatusCode";
 import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
+import { EmailService } from "./EmailService";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
@@ -184,7 +185,7 @@ export class AuthenticationService {
         return response;
     }
 
-    async forgotPassword(email: string): Promise<IResponse> {
+    async forgotPassword(email: string, resetURL: string): Promise<IResponse> {
         if (!email) {
             throw new APIError(
                 "Email not provided",
@@ -211,13 +212,28 @@ export class AuthenticationService {
         authenticated.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
         await authenticated.save();
-
+        const url = resetURL + `/${token[0]}`;
+        const message = `Forgot your password? Please click the link below to reset your password \ ${url}`;
+        try {
+            await new EmailService().sendEmail({
+                email: authenticated.email,
+                subject: "Your password reset token (valid for 10 mins)",
+                message,
+            });
+        } catch (ex: any) {
+            throw new APIError(
+                "Email sending failed",
+                HttpStatusCode.INTERNAL_SERVER,
+                "Email sending failed",
+                "We are unable to send you password reset email. Please try later",
+                true
+            );
+        }
         const response: IResponse = {
             success: true,
             message: "Email sent to your email address",
             statusCode: 200,
         };
-
         return response;
     }
 
