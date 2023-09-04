@@ -1,8 +1,10 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
+import { IBaseModel } from "./IBaseModel";
+import { IAuthenticateModel } from "./Models/IAuthenticateModel";
 
 const { DBConstants } = require("./DBConstants");
 
-const authenticateSchema = new Schema({
+const authenticateSchema = new Schema<IAuthenticateModel>({
     email: {
         type: String,
         required: true,
