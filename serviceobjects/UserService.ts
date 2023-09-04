@@ -8,6 +8,7 @@ import { HttpStatusCode } from "./enums/HttpStatusCode";
 export interface IUser extends IResponse {
     id?: String;
     name?: string;
+    roles: [Number];
     phone?: string;
     gender?: string;
     houseNumber?: string;
@@ -37,6 +38,7 @@ export class UserService {
             statusCode: 200,
             id: user.id,
             name: user.name,
+            roles: user.roles,
             phone: user.phone,
             gender: user.gender,
             houseNumber: user.houseNumber,
@@ -84,7 +86,7 @@ export class UserService {
         tokenTimeStamp: number
     ): Promise<boolean> {
         const user = await User.findById(id).select(
-            "_id isActive passwordUpdatedAt access_level"
+            "_id isActive passwordUpdatedAt roles"
         );
         if (!user || !user.isActive) {
             throw new APIError(

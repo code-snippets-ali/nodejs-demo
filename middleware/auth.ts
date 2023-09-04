@@ -1,9 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../serviceobjects/APIError";
-import { AccessLevel } from "../serviceobjects/enums/AccessLevel";
+import { Role } from "../serviceobjects/enums/Role";
 import { UserService } from "../serviceobjects/UserService";
+import { Common } from "../serviceobjects/Utilities/Common";
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
@@ -69,10 +70,15 @@ export async function auth(req: Request, res: Response, next: Function) {
         //#endregion
     }
 }
-function requiredAccess(...accessLevels: [AccessLevel]) {
+function requiredAccess(...accessLevels: [Role]) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
-        if (!accessLevels.includes(requestObject.user.access_level)) {
+        if (
+            !Common.hasCommonValue(
+                accessLevels,
+                requestObject.user.access_levels
+            )
+        ) {
             const apiError = new APIError(
                 "Invalid Access Token",
                 HttpStatusCode.FORBIDDEN,
@@ -86,7 +92,7 @@ function requiredAccess(...accessLevels: [AccessLevel]) {
     };
 }
 
-function requiredHigherAccessThan(accessLevel: AccessLevel) {
+function requiredHigherAccessThan(accessLevel: Role) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
         if (accessLevel >= requestObject.user.access_level) {
@@ -151,8 +157,15 @@ async function refresh(req: Request, res: Response, next: Function) {
     }
 }
 
+async function forgotPassword(req: Request, res: Response, next: Function) {}
+
+async function resetPassword(req: Request, res: Response, next: Function) {}
+
 // module.exports.auth = auth;
 module.exports.requiredAccess = requiredAccess;
 module.exports.requiredHigherAccess = requiredHigherAccessThan;
 
 module.exports.refresh = refresh;
+
+module.exports.forgotPassword = forgotPassword;
+module.exports.resetPassword = resetPassword;

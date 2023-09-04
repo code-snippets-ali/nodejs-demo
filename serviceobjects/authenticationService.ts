@@ -9,7 +9,8 @@ import { HttpStatusCode } from "./enums/HttpStatusCode";
 import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
-
+import { EmailService } from "./EmailService";
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const expires_accessToken = "8h";
@@ -184,6 +185,58 @@ export class AuthenticationService {
         return response;
     }
 
+    async forgotPassword(email: string, resetURL: string): Promise<IResponse> {
+        if (!email) {
+            throw new APIError(
+                "Email not provided",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "Please provide email address to continue",
+                true
+            );
+        }
+        const authenticated = await Authenticate.findOne({ email: email });
+
+        if (!authenticated) {
+            throw new APIError(
+                "Email Does not exist",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "This email address does not exist in our system",
+                true
+            );
+        }
+
+        const token = this.generateForgotPasswordToken();
+        authenticated.passwordResetToken = token[1];
+        authenticated.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+        await authenticated.save();
+        const url = resetURL + `/${token[0]}`;
+        const message = `Forgot your password? Please click the link below to reset your password \ ${url}`;
+        try {
+            await new EmailService().sendEmail({
+                email: authenticated.email,
+                subject: "Your password reset token (valid for 10 mins)",
+                message,
+            });
+        } catch (ex: any) {
+            throw new APIError(
+                "Email sending failed",
+                HttpStatusCode.INTERNAL_SERVER,
+                "Email sending failed",
+                "We are unable to send you password reset email. Please try later",
+                true
+            );
+        }
+        const response: IResponse = {
+            success: true,
+            message: "Email sent to your email address",
+            statusCode: 200,
+        };
+        return response;
+    }
+
     //#region Generate Access and Refresh token
 
     generateToken(userId: string, access_level: number): string {
@@ -205,6 +258,16 @@ export class AuthenticationService {
         HttpStatusCode;
     }
 
+    generateForgotPasswordToken(): [string, string] {
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        const tokenHash = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        return [resetToken, tokenHash];
+    }
     //#endregion
 
     //#region validating request
