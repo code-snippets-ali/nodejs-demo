@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema<IUserModel>({
     gender: String,
     houseNumber: String,
     streetNumber: String,
+    streetName: String,
     city: String,
     state: String,
     country: String,

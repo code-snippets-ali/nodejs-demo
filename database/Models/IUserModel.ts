@@ -8,6 +8,7 @@ export interface IUserModel extends IBaseModel {
     gender: string;
     houseNumber: string;
     streetNumber: string;
+    streetName: string;
     city: string;
     state: string;
     country: string;

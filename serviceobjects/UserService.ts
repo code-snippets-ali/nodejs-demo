@@ -1,9 +1,10 @@
-const { User } = require("../database/user");
 import Joi from "joi";
 import { APIError } from "./APIError";
 import { IResponse } from "./Interfaces/IResponse";
 import Messages from "./Utilities/Messages";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
+import { UserRepository } from "../repoitory/UserRepository";
+import { IUserModel } from "../database/Models/IUserModel";
 
 export interface IUser extends IResponse {
     id?: string;
@@ -20,10 +21,11 @@ export interface IUser extends IResponse {
 }
 
 export class UserService {
+    repository = new UserRepository();
     constructor() {}
 
     async me(id: string): Promise<IUser> {
-        const user = await User.findById(id);
+        const user: IUserModel | null = await this.repository.getById(id);
 
         if (!user) {
             throw new APIError(
@@ -64,7 +66,7 @@ export class UserService {
             );
         }
         params.id = requestBody.user._id;
-        const profile = await User.findById(params.id);
+        const profile = await this.repository.getById(params.id!);
         if (!profile) {
             throw new APIError(
                 "User Profile Does Not Exist",
@@ -74,6 +76,7 @@ export class UserService {
             );
         }
         profile.set(params);
+        await this.repository.create(profile);
 
         return {
             success: true,
@@ -85,9 +88,7 @@ export class UserService {
         id: string,
         tokenTimeStamp: number
     ): Promise<boolean> {
-        const user = await User.findById(id).select(
-            "_id isActive passwordUpdatedAt roles"
-        );
+        const user = await this.repository.getById(id);
         if (!user || !user.isActive) {
             throw new APIError(
                 "Inactive User",
