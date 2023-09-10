@@ -6,6 +6,6 @@ export interface IAuthenticateModel extends IBaseModel {
     email: string;
     password: string;
     passwordResetToken: string;
-    passwordResetExpires: string;
+    passwordResetExpires: Date;
     user: IUserModel;
 }

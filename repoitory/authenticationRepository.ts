@@ -1,21 +1,13 @@
 import { IAuthenticateModel } from "../database/Models/IAuthenticateModel";
+import { IUser } from "../serviceobjects/UserService";
 import { BaseRepository } from "./BaseRepository";
 
 const { Authenticate } = require("../database/authenticate");
+const { User } = require("../database/user");
 
-interface IAuthentication {
-    email: string;
-    _id: string;
-}
 export class AuthenticationRepository extends BaseRepository<IAuthenticateModel> {
     constructor() {
         super(Authenticate);
-    }
-    async getAuthenticationRecord(
-        email: string
-    ): Promise<IAuthentication | null> {
-        const auth = await Authenticate.findOne({ email: email });
-        return auth;
     }
 
     async findByEmail(email: string): Promise<IAuthenticateModel | null> {
@@ -23,5 +15,26 @@ export class AuthenticationRepository extends BaseRepository<IAuthenticateModel>
             email: email,
         }).populate("user");
         return model;
+    }
+
+    async createAuthenticationForUser(
+        email: string,
+        password: string,
+        name: string
+    ): Promise<IUser> {
+        const authentication = new Authenticate({
+            email,
+            password,
+            name,
+        });
+
+        const user = new User({
+            name,
+            email,
+        });
+        authentication.user = user;
+        await authentication.save();
+        await user.save();
+        return user;
     }
 }

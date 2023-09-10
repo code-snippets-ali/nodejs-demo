@@ -6,9 +6,9 @@ import Messages from "./Utilities/Messages";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
 
 export interface IUser extends IResponse {
-    id?: String;
+    id?: string;
     name?: string;
-    roles: [Number];
+    roles: [number];
     phone?: string;
     gender?: string;
     houseNumber?: string;
