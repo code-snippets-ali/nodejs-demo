@@ -10,6 +10,8 @@ import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
 import { EmailService } from "./EmailService";
+import { AuthenticationRepository } from "../repoitory/authenticationRepository";
+import { IAuthenticateModel } from "../database/Models/IAuthenticateModel";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
@@ -62,6 +64,8 @@ export interface IAuthenticationResponse extends IResponse {
 //#endregion
 
 export class AuthenticationService {
+    repository: AuthenticationRepository = new AuthenticationRepository();
+
     constructor() {}
 
     async refreshToken(
@@ -97,10 +101,8 @@ export class AuthenticationService {
                 error.details[0].message
             );
         }
-
-        let authenticated = await Authenticate.findOne({
-            email: params.email,
-        }).populate("user");
+        const authenticated: IAuthenticateModel | null =
+            await this.repository.findByEmail(params.email);
 
         if (!authenticated) {
             throw new APIError(
@@ -125,7 +127,7 @@ export class AuthenticationService {
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(
                 authenticated.user._id,
-                authenticated.user.access_level
+                authenticated.user.roles
             ),
             refreshToken: this.generateRefreshToken(authenticated.user._id),
             expiresIn: expires_accessToken,
@@ -239,9 +241,9 @@ export class AuthenticationService {
 
     //#region Generate Access and Refresh token
 
-    generateToken(userId: string, access_level: number): string {
+    generateToken(userId: string, roles: [number]): string {
         const token = jwt.sign(
-            { _id: userId, access_level: access_level },
+            { _id: userId, access_level: roles },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );

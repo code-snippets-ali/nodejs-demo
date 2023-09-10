@@ -3,7 +3,7 @@ import { IBaseModel } from "../IBaseModel";
 
 export interface IUserModel extends IBaseModel {
     name: string;
-    roles: [Number];
+    roles: [number];
     phone: string;
     gender: string;
     houseNumber: string;

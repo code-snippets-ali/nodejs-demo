@@ -21,7 +21,7 @@ export class AuthenticationRepository extends BaseRepository<IAuthenticateModel>
     async findByEmail(email: string): Promise<IAuthenticateModel | null> {
         const model: IAuthenticateModel = Authenticate.findOne({
             email: email,
-        });
+        }).populate("user");
         return model;
     }
 }
