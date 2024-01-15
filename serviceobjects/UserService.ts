@@ -75,7 +75,7 @@ export class UserService {
                 "There is no profile for this user."
             );
         }
-        profile.set(params);
+        await this.repository.update(params.id!, params);
         await this.repository.create(profile);
 
         return {
@@ -123,6 +123,8 @@ export class UserService {
                 .max(500)
                 .optional()
                 .messages(Messages.nameValidationMessages()),
+            streetName: Joi.string().optional(),
+
             user: Joi.object().optional(),
         });
         return schema.validate(req);
