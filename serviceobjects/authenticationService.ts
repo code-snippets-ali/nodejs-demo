@@ -1,5 +1,3 @@
-const { Authenticate } = require("../database/authenticate");
-const { User } = require("../database/user");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 import { DBConstants } from "../database/DBConstants";
@@ -10,6 +8,10 @@ import Messages from "./Utilities/Messages";
 import { IResponse } from "./Interfaces/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
 import { EmailService } from "./EmailService";
+import { AuthenticationRepository } from "../repoitory/authenticationRepository";
+import { IAuthenticateModel } from "../database/Models/IAuthenticateModel";
+import { UserRepository } from "../repoitory/UserRepository";
+import { IUserModel } from "../database/Models/IUserModel";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
@@ -62,12 +64,16 @@ export interface IAuthenticationResponse extends IResponse {
 //#endregion
 
 export class AuthenticationService {
+    repository: AuthenticationRepository = new AuthenticationRepository();
+    userRepository: UserRepository = new UserRepository();
     constructor() {}
 
     async refreshToken(
         params: IRefreshTokenRequest
     ): Promise<IAuthenticationResponse> {
-        const user = await User.findOne({ _id: params._id });
+        const user: IUserModel | null = await this.userRepository.getById(
+            params._id
+        );
 
         if (!user) {
             throw new APIError(
@@ -78,7 +84,7 @@ export class AuthenticationService {
             );
         }
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(user._id, user.access_level),
+            accessToken: this.generateToken(user._id, user.roles),
             refreshToken: this.generateRefreshToken(user._id),
             expiresIn: expires_accessToken,
             success: true,
@@ -97,10 +103,8 @@ export class AuthenticationService {
                 error.details[0].message
             );
         }
-
-        let authenticated = await Authenticate.findOne({
-            email: params.email,
-        }).populate("user");
+        const authenticated: IAuthenticateModel | null =
+            await this.repository.findByEmail(params.email);
 
         if (!authenticated) {
             throw new APIError(
@@ -125,7 +129,7 @@ export class AuthenticationService {
         const response: IAuthenticationResponse = {
             accessToken: this.generateToken(
                 authenticated.user._id,
-                authenticated.user.access_level
+                authenticated.user.roles
             ),
             refreshToken: this.generateRefreshToken(authenticated.user._id),
             expiresIn: expires_accessToken,
@@ -147,9 +151,8 @@ export class AuthenticationService {
                 error.details[0].message
             );
         }
-        const authenticated = await Authenticate.findOne({
-            email: params.email,
-        });
+        const authenticated: IAuthenticateModel | null =
+            await this.repository.findByEmail(params.email);
         if (authenticated) {
             throw new APIError(
                 "Registration User Already Exist",
@@ -162,22 +165,14 @@ export class AuthenticationService {
         const salt = await bcrypt.genSalt(12);
         const hash = await bcrypt.hash(params.password, salt);
 
-        const authentication = new Authenticate({
-            email: params.email,
-            password: hash,
-        });
-
-        const user = new User({
-            name: params.name,
-            email: params.email,
-        });
-        authentication.user = user;
-        await authentication.save();
-        await user.save();
-
+        const user = await this.repository.createAuthenticationForUser(
+            params.email,
+            hash,
+            params.name
+        );
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(user._id, user.access_level),
-            refreshToken: this.generateRefreshToken(user._id),
+            accessToken: this.generateToken(user.id!, user.roles),
+            refreshToken: this.generateRefreshToken(user.id!),
             expiresIn: expires_accessToken,
             success: true,
             statusCode: HttpStatusCode.CREATED,
@@ -195,7 +190,7 @@ export class AuthenticationService {
                 true
             );
         }
-        const authenticated = await Authenticate.findOne({ email: email });
+        const authenticated = await this.repository.findByEmail(email);
 
         if (!authenticated) {
             throw new APIError(
@@ -209,7 +204,9 @@ export class AuthenticationService {
 
         const token = this.generateForgotPasswordToken();
         authenticated.passwordResetToken = token[1];
-        authenticated.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+        authenticated.passwordResetExpires = new Date(
+            Date.now() + 10 * 60 * 1000
+        );
 
         await authenticated.save();
         const url = resetURL + `/${token[0]}`;
@@ -239,9 +236,9 @@ export class AuthenticationService {
 
     //#region Generate Access and Refresh token
 
-    generateToken(userId: string, access_level: number): string {
+    generateToken(userId: string, roles: [number]): string {
         const token = jwt.sign(
-            { _id: userId, access_level: access_level },
+            { _id: userId, access_level: roles },
             appConfig(Settings.JWTPrivateKey),
             { expiresIn: expires_accessToken }
         );

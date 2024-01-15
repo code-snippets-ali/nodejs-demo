@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose from "mongoose";
+import { IUserModel } from "./Models/IUserModel";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema<IUserModel>({
     name: {
         type: String,
         required: true,
@@ -17,6 +18,7 @@ const userSchema = new mongoose.Schema({
     gender: String,
     houseNumber: String,
     streetNumber: String,
+    streetName: String,
     city: String,
     state: String,
     country: String,
