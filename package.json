@@ -6,7 +6,8 @@
     "scripts": {
         "start": "tsc & node dist/server.js",
         "start:dev": "nodemon server.ts",
-        "debug": "ndb server.ts"
+        "debug": "ndb server.ts",
+        "postinstall": "tsc"
     },
     "author": "",
     "license": "ISC",
