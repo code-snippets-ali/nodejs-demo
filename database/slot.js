@@ -9,7 +9,7 @@ const slotSchema = new mongoose.Schema({
     startMinute: {
         type: Number,
         min: 0,
-        max: 60,
+        max: 59,
     },
     duration: Number,
 });
