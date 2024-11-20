@@ -2,5 +2,7 @@
     "name": "My Express Appp - Production",
     "mail": {
         "host": "prod-mail-server"
-    }
+    },
+    "DBString": "healthapp_DBString",
+    "JWTPrivateKey": "healthapp_JWTPrivateKey"
 }

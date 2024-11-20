@@ -70,6 +70,7 @@ export async function auth(req: Request, res: Response, next: Function) {
         //#endregion
     }
 }
+
 function requiredAccess(...accessLevels: [Role]) {
     return (req: Request, res: Response, next: Function) => {
         let requestObject = req as any;
