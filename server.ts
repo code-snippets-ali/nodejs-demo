@@ -1,3 +1,4 @@
+require("express-async-errors");
 const app = require("./startup/routes");
 require("./startup/config")();
 require("./startup/db")();
