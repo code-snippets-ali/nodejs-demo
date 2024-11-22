@@ -27,9 +27,21 @@ module.exports = function (
     if (apiError) {
         statusCode = apiError.statusCode;
         message = apiError.message;
+        logger.smartLog(error.message, statusCode, {
+            details: {
+                statusCode: statusCode,
+                Type: "API Error",
+                Body: req.body,
+                URL: req.url,
+                Query: req.query,
+                Parameters: req.params,
+                Method: req.method,
+            },
+        });
     } else {
-        logger.error(error.message, {
-            metadata: {
+        logger.smartLog(error.message, statusCode, {
+            details: {
+                statusCode: statusCode,
                 Type: "Handled UnExpected Exception",
                 Body: req.body,
                 URL: req.url,
@@ -45,10 +57,6 @@ module.exports = function (
     } else {
         sendErrorProduction(error, req, res, statusCode, message);
     }
-    // logger.info(error.message, [req.body, req.url, req.query, req.params]);
-
-    console.log(req.body);
-    console.log(error.message);
 };
 
 function sendErrorDevelopment(

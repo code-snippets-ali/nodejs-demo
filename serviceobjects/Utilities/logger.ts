@@ -1,46 +1,105 @@
-import { Logger } from "winston";
+import winston, { Logger, transports, format } from "winston";
+import "winston-mongodb"; // Import the MongoDB transport
+import { appConfig, Settings } from "./Settings";
+import { HttpStatusCode } from "../enums/HttpStatusCode";
 
-const winston = require("winston");
-const { appConfig, Settings } = require("./Settings");
-require("winston-mongodb");
-
-class LoggerService {
-    logger: Logger;
-    constructor() {
+export class LoggerService {
+    private logger: Logger;
+    constructor(mongoUri: string, collectionName: string = "logs") {
+        // Custom filter to restrict logs to a specific level
+        const levelFilter = (level: string) => {
+            return winston.format((info) => {
+                return info.level === level ? info : false;
+            })();
+        };
         this.logger = winston.createLogger({
-            level: "error",
-            format: winston.format.json(),
-            defaultMeta: { service: "user-service" },
+            level: "debug", // The lowest level to log (captures all levels)
+            format: format.combine(
+                format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+                format.errors({ stack: true }),
+                format.json()
+            ),
             transports: [
-                //
-                // - Write all logs with importance level of `error` or less to `error.log`
-                // - Write all logs with importance level of `info` or less to `combined.log`
-                //
-                new winston.transports.File({
+                new transports.File({
                     filename: "error.log",
-                    level: "error",
+                    format: winston.format.combine(
+                        levelFilter("error"), // Only log errors
+                        winston.format.json()
+                    ),
                 }),
-                new winston.transports.File({ filename: "combined.log" }),
-                new winston.transports.MongoDB({
-                    db: appConfig(Settings.DBString),
+                new transports.File({
+                    filename: "warn.log",
+                    format: winston.format.combine(
+                        levelFilter("warn"), // Only log warn
+                        winston.format.json()
+                    ),
+                }),
+                new transports.File({
+                    filename: "info.log",
+                    format: winston.format.combine(
+                        levelFilter("info"), // Only log info
+                        winston.format.json()
+                    ),
+                }),
+                new transports.File({
+                    filename: "debug.log",
+                    format: winston.format.combine(
+                        levelFilter("debug"), // Only log debug
+                        winston.format.json()
+                    ),
+                }),
+                new transports.MongoDB({
+                    db: mongoUri,
+                    collection: collectionName,
+                    level: "warn", // Logs `error` level and above to MongoDB
+                    format: format.combine(format.timestamp(), format.json()),
                 }),
             ],
         });
 
-        this.logger.add(
-            new winston.transports.Console({
-                format: winston.format.simple(),
-            })
-        );
+        // Log to console in development
+        if (process.env.NODE_ENV !== "production") {
+            this.logger.add(
+                new transports.Console({
+                    format: format.combine(format.colorize(), format.simple()),
+                })
+            );
+        }
     }
-    error(message: string, error: any) {
-        this.logger.error(message, error);
+
+    public error(message: string, meta?: any): void {
+        this.logger.error(message, meta);
     }
-    info(message: string, error: any) {
-        this.logger.info(message, error);
+
+    public warn(message: string, meta?: any): void {
+        this.logger.warn(message, meta);
     }
-    warn(message: string, error: any) {
-        this.logger.warn(message, error);
+
+    public info(message: string, meta?: any): void {
+        this.logger.info(message, meta);
+    }
+
+    public debug(message: string, meta?: any): void {
+        this.logger.debug(message, meta);
+    }
+
+    public log(level: string, message: string, meta?: any): void {
+        this.logger.log(level, message, meta);
+    }
+
+    public smartLog(message: string, status: number, meta?: any): void {
+        if (status >= HttpStatusCode.INTERNAL_SERVER) {
+            this.error(message, meta);
+        } else if (
+            status == HttpStatusCode.BAD_REQUEST ||
+            status == HttpStatusCode.NOT_FOUND
+        ) {
+            this.info(message, meta);
+        } else if (status == HttpStatusCode.UNAUTHORIZED) {
+            this.warn(message, meta);
+        } else {
+            this.debug(message, meta);
+        }
     }
 }
-export const logger = new LoggerService();
+export const logger = new LoggerService(appConfig(Settings.DBString));
