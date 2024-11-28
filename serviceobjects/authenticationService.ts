@@ -14,6 +14,7 @@ import { UserRepository } from "../repoitory/UserRepository";
 import { IUserModel } from "../database/Models/IUserModel";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 
 const expires_accessToken = "8h";
 const expires_RefreshToken = "30d";
@@ -234,7 +235,7 @@ export class AuthenticationService {
         return response;
     }
 
-    //#region Generate Access and Refresh token
+    //#region Generate Access and Refresh token and also verify token
 
     generateToken(userId: string, roles: [number]): string {
         const token = jwt.sign(
@@ -264,6 +265,22 @@ export class AuthenticationService {
             .digest("hex");
 
         return [resetToken, tokenHash];
+    }
+
+    async verifyToken(token: string): Promise<any> {
+        try {
+            return await promisify(jwt.verify)(
+                token,
+                appConfig(Settings.JWTPrivateKey)
+            );
+        } catch (ex: any) {
+            throw new APIError(
+                "Invalid Access Token",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "You donot have permission for this action"
+            );
+        }
     }
     //#endregion
 

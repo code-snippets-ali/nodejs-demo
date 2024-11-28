@@ -12,7 +12,7 @@ module.exports = function (server: any) {
         });
     });
     process.on("unhandledRejection", (ex: any) => {
-        console.log("Here is uncaught exception");
+        console.log("Here is unhandled rejection");
         logger.error(ex.message, {
             metadata: { Type: "Unhandled Rejection", ex },
         });

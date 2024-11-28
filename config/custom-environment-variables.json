@@ -3,5 +3,6 @@
         "password": "app_password"
     },
     "JWTPrivateKey": "healthapp_JWTPrivateKey",
-    "DBString": "healthapp_DBString"
+    "DBString": "healthapp_DBString",
+    "DBString_Test": "healthapp_DBString_Test"
 }

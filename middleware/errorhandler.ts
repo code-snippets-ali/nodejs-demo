@@ -51,7 +51,7 @@ module.exports = function (
             },
         });
     }
-    console.log(`Environment is ${process.env.NODE_ENV}`);
+    // console.log(`Environment is ${process.env.NODE_ENV}`);
     if (process.env.NODE_ENV == "development") {
         sendErrorDevelopment(error, req, res, statusCode, message);
     } else {

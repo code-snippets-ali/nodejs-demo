@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Medicin = require("./medicine");
 const Diagnosis = require("./diagnosis");
-const Test = require("./test");
+const Test = require("./testResult");
 
 const appointmentSchema = new mongoose.Schema({
     date: Date,

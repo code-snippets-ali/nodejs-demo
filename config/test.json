@@ -1,0 +1,8 @@
+{
+    "name": "My Express App - Development",
+    "mail": {
+        "host": "dev-mail-server"
+    },
+    "DBString": "healthapp_DBString_Test",
+    "JWTPrivateKey": "healthapp_JWTPrivateKey"
+}
