@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { logger } from "../serviceobjects/Utilities/logger";
-import { APIError } from "../serviceobjects/APIError";
+import { APIError } from "../core-sdk/APIError";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 
 module.exports = function (
@@ -51,11 +51,25 @@ module.exports = function (
             },
         });
     }
-    console.log(`Environment is ${process.env.NODE_ENV}`);
+    // console.log(`Environment is ${process.env.NODE_ENV}`);
     if (process.env.NODE_ENV == "development") {
-        sendErrorDevelopment(error, req, res, statusCode, message);
+        sendErrorDevelopment(
+            error,
+            req,
+            res,
+            statusCode,
+            message,
+            apiError?.errors
+        );
     } else {
-        sendErrorProduction(error, req, res, statusCode, message);
+        sendErrorProduction(
+            error,
+            req,
+            res,
+            statusCode,
+            message,
+            apiError?.errors
+        );
     }
 };
 
@@ -64,13 +78,15 @@ function sendErrorDevelopment(
     req: Request,
     res: Response,
     statusCode: HttpStatusCode,
-    message: string
+    message: string,
+    errors?: any
 ) {
     res.status(statusCode).send({
         success: false,
         statusCode: statusCode,
         message: message,
         error: error,
+        errors: errors,
         stack: error.stack,
     });
 }
@@ -80,12 +96,14 @@ function sendErrorProduction(
     req: Request,
     res: Response,
     statusCode: HttpStatusCode,
-    message: string
+    message: string,
+    errors?: any
 ) {
     res.status(statusCode).send({
         success: false,
         statusCode: statusCode,
         message: message,
+        errors,
     });
 }
 

@@ -1,5 +1,6 @@
 import { IAuthenticateModel } from "../database/Models/IAuthenticateModel";
-import { IUser } from "../serviceobjects/UserService";
+import { IUserModel } from "../database/Models/IUserModel";
+
 import { BaseRepository } from "./BaseRepository";
 
 const { Authenticate } = require("../database/authenticate");
@@ -21,7 +22,7 @@ export class AuthenticationRepository extends BaseRepository<IAuthenticateModel>
         email: string,
         password: string,
         name: string
-    ): Promise<IUser> {
+    ): Promise<IUserModel> {
         const authentication = new Authenticate({
             email,
             password,

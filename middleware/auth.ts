@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
-import { APIError } from "../serviceobjects/APIError";
+import { APIError } from "../core-sdk/APIError";
 import { Role } from "../serviceobjects/enums/Role";
-import { UserService } from "../serviceobjects/UserService";
+import { UserService } from "../serviceobjects/userService";
 import { Common } from "../serviceobjects/Utilities/Common";
+import { AuthenticationService } from "../serviceobjects/authenticationService";
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
@@ -31,12 +32,8 @@ export async function auth(req: Request, res: Response, next: Function) {
 
     try {
         //#region 2. Check if provided token is a valid token
-        const decoded = await promisify(jwt.verify)(
-            token,
-            appConfig(Settings.JWTPrivateKey)
-        );
+        const decoded = await new AuthenticationService().verifyToken(token);
         //#endregion
-
         //#region 3. Test if user is account is still active and Have valid passwod
         await new UserService().isActiveUserWithSamePassword(
             decoded._id,
@@ -62,7 +59,7 @@ export async function auth(req: Request, res: Response, next: Function) {
         }
         const apiError = new APIError(
             "Invalid Access Token",
-            HttpStatusCode.UNAUTHORIZED,
+            HttpStatusCode.BAD_REQUEST,
             "",
             message
         );

@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { IBaseModel } from "../IBaseModel";
 import { IUserModel } from "./IUserModel";
 

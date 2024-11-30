@@ -1,5 +1,5 @@
 //https://www.toptal.com/nodejs/node-js-error-handling
-import { HttpStatusCode } from "./enums/HttpStatusCode";
+import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 export class ResultError {
     statusCode: Number;
     message: String;
@@ -36,13 +36,16 @@ export class AppError extends Error {
 
 //free to extend the BaseError
 export class APIError extends AppError {
+    public readonly errors?: any;
     constructor(
         name: string,
         statusCode = HttpStatusCode.INTERNAL_SERVER,
         description = "internal server error",
         userMessage = "There is some error in service",
+        errors?: any,
         isOperational = true
     ) {
         super(name, statusCode, description, userMessage, isOperational);
+        this.errors = errors;
     }
 }

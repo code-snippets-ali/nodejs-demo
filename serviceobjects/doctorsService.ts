@@ -1,5 +1,5 @@
 const Doctor = require("../database/doctor");
-import { APIError } from "./APIError";
+import { APIError } from "../core-sdk/APIError";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
 const Joi = require("joi");
 export interface IDoctor {

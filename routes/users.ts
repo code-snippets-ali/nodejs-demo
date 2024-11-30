@@ -1,9 +1,15 @@
 import express from "express";
-import { UserService } from "../serviceobjects/UserService";
-import { getProfile, updateProfile } from "../controllers/userController";
+import { getProfile, updateUser } from "../controllers/userController";
+import { validateUserPatchRequest } from "../core-sdk/contracts/user/UserPatchRequest";
+import { validateUserPutRequest } from "../core-sdk/contracts/user/UserPutRequest";
+
 const { auth } = require("../middleware/auth");
 const router = express.Router();
 
-router.route("/me").get(auth, getProfile).patch(auth, updateProfile);
+router
+    .route("/me")
+    .get(auth, getProfile)
+    .patch(auth, validateUserPatchRequest, updateUser)
+    .put(auth, validateUserPutRequest, updateUser);
 
 module.exports = router;

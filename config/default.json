@@ -1,5 +1,5 @@
 {
     "name": "My Express Appp",
-    "DBString": "healthapp_DBString",
-    "JWTPrivateKey": "healthapp_JWTPrivateKey"
+    "JWTPrivateKey": "healthapp_JWTPrivateKey",
+    "DBString": "healthapp_DBString_Test"
 }
