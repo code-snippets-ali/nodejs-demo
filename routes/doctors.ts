@@ -3,7 +3,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 const router = express.Router();
 const { DoctorService } = require("../serviceobjects/doctorsService");
 import { DoctorsService } from "../serviceobjects/doctorsService";
-import { APIError, ResultError } from "../serviceobjects/APIError";
+import { APIError, ResultError } from "../core-sdk/APIError";
 const service = new DoctorsService();
 
 router.get("/", async (req: Request, res: Response) => {

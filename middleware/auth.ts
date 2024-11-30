@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
-import { APIError } from "../serviceobjects/APIError";
+import { APIError } from "../core-sdk/APIError";
 import { Role } from "../serviceobjects/enums/Role";
-import { UserService } from "../serviceobjects/UserService";
+import { UserService } from "../serviceobjects/userService";
 import { Common } from "../serviceobjects/Utilities/Common";
 import { AuthenticationService } from "../serviceobjects/authenticationService";
 const jwt = require("jsonwebtoken");

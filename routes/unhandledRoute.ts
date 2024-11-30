@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { APIError } from "../serviceobjects/APIError";
+import { APIError } from "../core-sdk/APIError";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 
 import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";

@@ -1,29 +1,12 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { IDoctor } from "./Models/IDoctor";
 
-const doctorSchema = new Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: "User",
-    },
-    licence_number: String,
-    title: String,
-    qualification: String,
-    education: String,
-    board_certificates: String,
-    specializations: {
-        type: [String],
-    },
-    registration_number: String,
-    practice_start_date: Date,
-    languages_spoken: [String],
-    professional_memberships: String,
-    research_interests: String,
-    awards_and_recognition: String,
-    general_description: String,
-    profile_picture_url: String,
-    hospital_affiliation: String,
-    training: String,
+const doctorSchema = new Schema<IDoctor>({
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    specialization: { type: String, required: true },
+    description: String,
+    isActive: { type: Boolean, default: false },
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);

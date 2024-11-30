@@ -1,17 +1,18 @@
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
-import { DBConstants } from "../database/DBConstants";
 
-import { APIError } from "./APIError";
+import { APIError } from "../core-sdk/APIError";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
-import Messages from "./Utilities/Messages";
-import { IResponse } from "./Interfaces/IResponse";
+import { IResponse } from "../core-sdk/contracts/IResponse";
 import { appConfig, Settings } from "./Utilities/Settings";
 import { EmailService } from "./EmailService";
 import { AuthenticationRepository } from "../repoitory/authenticationRepository";
 import { IAuthenticateModel } from "../database/Models/IAuthenticateModel";
 import { UserRepository } from "../repoitory/UserRepository";
 import { IUserModel } from "../database/Models/IUserModel";
+import { IRegisterRequest } from "../core-sdk/contracts/auhentication/RegisterRequest";
+import { ISignInRequest } from "../core-sdk/contracts/auhentication/SigninRequest";
+import { IAuthenticationResponse } from "../core-sdk/contracts/auhentication/AuthenticationResponse";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
@@ -19,47 +20,15 @@ const { promisify } = require("util");
 const expires_accessToken = "8h";
 const expires_RefreshToken = "30d";
 
-//#region validation Error Messages
-enum Validations {
-    email_invalid = "Please provide a valid email address.",
-    email_required = "Please provide an email to continue.",
-    email_empty = "Email provided is empty. Please provide a valid email address",
-    email_max = "Email address is too long. Please do not provide more than 500 characters.",
-
-    password = "Please proide a password for regietering new account.",
-    password_min = "Please provide atleast 5 characters for your password.",
-    password_max = "Password is too long. Please do not provide more than 500 characters for password.",
-
-    name_required = "Please provide your name to register a new account.",
-    name_min = "Please provide atleast one character for your name",
-    name_max = "Name is too long. Please do not provide more than 500 characters.",
-}
-
-//#endregion
-
 //#region Request Interfaces
 
 export interface IRefreshTokenRequest {
     _id: string;
 }
-export interface ISignupRequest {
-    name: string;
-    email: string;
-    password: string;
-}
+
 export interface ISigninRequest {
     email: string;
     password: string;
-}
-
-//#endregion
-
-//#region Response interfaces
-
-export interface IAuthenticationResponse extends IResponse {
-    accessToken?: string;
-    refreshToken?: string;
-    expiresIn?: string;
 }
 
 //#endregion
@@ -68,42 +37,41 @@ export class AuthenticationService {
     repository: AuthenticationRepository = new AuthenticationRepository();
     userRepository: UserRepository = new UserRepository();
     constructor() {}
+    //#region Authentication Methods
 
-    async refreshToken(
-        params: IRefreshTokenRequest
+    async registerUser(
+        params: IRegisterRequest
     ): Promise<IAuthenticationResponse> {
-        const user: IUserModel | null = await this.userRepository.getById(
-            params._id
-        );
-
-        if (!user) {
+        const authenticated: IAuthenticateModel | null =
+            await this.repository.findByEmail(params.email);
+        if (authenticated) {
             throw new APIError(
-                "Refresh Token User does not exist",
+                "Registration User Already Exist",
                 HttpStatusCode.BAD_REQUEST,
                 "",
-                "Unable to refresh token. Please sign in again"
+                "User already exist. Please sign in"
             );
         }
+
+        const salt = await bcrypt.genSalt(12);
+        const hash = await bcrypt.hash(params.password, salt);
+
+        const user = await this.repository.createAuthenticationForUser(
+            params.email,
+            hash,
+            params.name
+        );
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(user._id, user.roles),
-            refreshToken: this.generateRefreshToken(user._id),
+            accessToken: this.generateToken(user.id!, user.roles),
+            refreshToken: this.generateRefreshToken(user.id!),
             expiresIn: expires_accessToken,
             success: true,
-            statusCode: HttpStatusCode.OK,
+            statusCode: HttpStatusCode.CREATED,
         };
         return response;
     }
 
-    async signIn(params: ISigninRequest): Promise<IAuthenticationResponse> {
-        const { error } = this.validateSignin(params);
-        if (error) {
-            throw new APIError(
-                "Sign in validation",
-                HttpStatusCode.BAD_REQUEST,
-                "",
-                error.details[0].message
-            );
-        }
+    async signIn(params: ISignInRequest): Promise<IAuthenticationResponse> {
         const authenticated: IAuthenticateModel | null =
             await this.repository.findByEmail(params.email);
 
@@ -140,43 +108,27 @@ export class AuthenticationService {
         return response;
     }
 
-    async registerUser(
-        params: ISignupRequest
+    async refreshToken(
+        params: IRefreshTokenRequest
     ): Promise<IAuthenticationResponse> {
-        const { error } = this.validateCreate(params);
-        if (error) {
-            throw new APIError(
-                "Registration Validation Failed",
-                HttpStatusCode.BAD_REQUEST,
-                "",
-                error.details[0].message
-            );
-        }
-        const authenticated: IAuthenticateModel | null =
-            await this.repository.findByEmail(params.email);
-        if (authenticated) {
-            throw new APIError(
-                "Registration User Already Exist",
-                HttpStatusCode.BAD_REQUEST,
-                "",
-                "User already exist. Please sign in"
-            );
-        }
-
-        const salt = await bcrypt.genSalt(12);
-        const hash = await bcrypt.hash(params.password, salt);
-
-        const user = await this.repository.createAuthenticationForUser(
-            params.email,
-            hash,
-            params.name
+        const user: IUserModel | null = await this.userRepository.getById(
+            params._id
         );
+
+        if (!user) {
+            throw new APIError(
+                "Refresh Token User does not exist",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "Unable to refresh token. Please sign in again"
+            );
+        }
         const response: IAuthenticationResponse = {
-            accessToken: this.generateToken(user.id!, user.roles),
-            refreshToken: this.generateRefreshToken(user.id!),
+            accessToken: this.generateToken(user._id, user.roles),
+            refreshToken: this.generateRefreshToken(user._id),
             expiresIn: expires_accessToken,
             success: true,
-            statusCode: HttpStatusCode.CREATED,
+            statusCode: HttpStatusCode.OK,
         };
         return response;
     }
@@ -234,7 +186,7 @@ export class AuthenticationService {
         };
         return response;
     }
-
+    //#endregion
     //#region Generate Access and Refresh token and also verify token
 
     generateToken(userId: string, roles: [number]): string {
@@ -282,53 +234,5 @@ export class AuthenticationService {
             );
         }
     }
-    //#endregion
-
-    //#region validating request
-
-    validateCreate(req: any): any {
-        console.log("validation started");
-        const schema = Joi.object({
-            name: Joi.string()
-                .min(DBConstants.NameMinLength)
-                .max(DBConstants.NameMaxLength)
-                .required()
-                .messages(Messages.nameValidationMessages()),
-            email: Joi.string()
-                .email()
-                .min(DBConstants.EmailMinLength)
-                .max(DBConstants.EmailMaxLength)
-                .required()
-                .messages(Messages.emailValidationMesages()),
-            password: Joi.string()
-                .min(DBConstants.PasswordMinLength)
-                .max(DBConstants.PasswordMaxLength)
-                .required()
-                .messages(Messages.passwordValidationMessages()),
-        });
-        console.log("validation returned");
-        return schema.validate(req);
-    }
-
-    validateSignin(req: any) {
-        console.log("validation started", req);
-        const schema = Joi.object({
-            email: Joi.string()
-                .email()
-                .max(DBConstants.EmailMaxLength)
-                .min(DBConstants.EmailMinLength)
-                .required()
-                .messages(Messages.emailValidationMesages()),
-
-            password: Joi.string()
-                .min(DBConstants.PasswordMinLength)
-                .max(DBConstants.PasswordMaxLength)
-                .required(Messages.passwordValidationMessages())
-                .messages(Messages.passwordValidationMessages()),
-        });
-        console.log("validation returned");
-        return schema.validate(req);
-    }
-
     //#endregion
 }

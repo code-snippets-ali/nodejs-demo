@@ -1,30 +1,21 @@
 import Joi from "joi";
-import { APIError } from "./APIError";
-import { IResponse } from "./Interfaces/IResponse";
+
 import Messages from "./Utilities/Messages";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
 import { UserRepository } from "../repoitory/UserRepository";
 import { IUserModel } from "../database/Models/IUserModel";
-
-export interface IUser extends IResponse {
-    id?: string;
-    name?: string;
-    roles: [number];
-    phone?: string;
-    gender?: string;
-    houseNumber?: string;
-    streetNumber?: string;
-    streetName?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-}
+import { IResponse } from "../core-sdk/contracts/IResponse";
+import { APIError } from "../core-sdk/APIError";
+import { IUserResponse } from "../core-sdk/contracts/user/UserResponse";
+import { IUserPatchRequest } from "../core-sdk/contracts/user/UserPatchRequest";
+import { IUserPutRequest } from "../core-sdk/contracts/user/UserPutRequest";
 
 export class UserService {
     repository = new UserRepository();
     constructor() {}
 
-    async me(id: string): Promise<IUser> {
+    //#region methods to return user and update user profile
+    async me(id: string): Promise<IUserResponse> {
         const user: IUserModel | null = await this.repository.getById(id);
 
         if (!user) {
@@ -35,38 +26,22 @@ export class UserService {
                 "There is no profile for this user."
             );
         }
-        const response: IUser = {
+        const response: IUserResponse = {
             success: true,
             statusCode: 200,
             id: user.id,
             name: user.name,
-            roles: user.roles,
-            phone: user.phone,
-            gender: user.gender,
-            houseNumber: user.houseNumber,
-            streetNumber: user.streetNumber,
-            streetName: user.streetName,
-            city: user.city,
-            state: user.state,
-            country: user.country,
+            email: user.email,
+            isActive: user.isActive,
         };
         return response;
     }
 
-    async updateProfile(requestBody: any): Promise<IResponse> {
-        const params: IUser = requestBody;
-        const { error } = this.validateProfileUpdate(params);
-
-        if (error) {
-            throw new APIError(
-                "User Profile Does Not Exist",
-                HttpStatusCode.BAD_REQUEST,
-                "",
-                error.details[0].message
-            );
-        }
-        params.id = requestBody.user._id;
-        const profile = await this.repository.getById(params.id!);
+    async updateProfile(
+        userPutRequest: IUserPutRequest | IUserPatchRequest,
+        id: string
+    ): Promise<IUserResponse> {
+        const profile = await this.repository.getById(id);
         if (!profile) {
             throw new APIError(
                 "User Profile Does Not Exist",
@@ -75,14 +50,12 @@ export class UserService {
                 "There is no profile for this user."
             );
         }
-        await this.repository.update(params.id!, params);
-        await this.repository.create(profile);
-
-        return {
-            success: true,
-            statusCode: HttpStatusCode.UPDATED,
-        };
+        console.log(userPutRequest);
+        await this.repository.update(id, userPutRequest);
+        const user = await this.me(id);
+        return user;
     }
+    //#endregion
 
     async isActiveUserWithSamePassword(
         id: string,
@@ -116,7 +89,7 @@ export class UserService {
     async hasPasswordChangedAfter(time: number): Promise<boolean> {
         return false;
     }
-    validateProfileUpdate(req: IUser): any {
+    validateProfileUpdate(req: IUserResponse): any {
         const schema = Joi.object({
             name: Joi.string()
                 .min(1)

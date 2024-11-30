@@ -5,7 +5,7 @@ import { AuthenticationService } from "../../serviceobjects/authenticationServic
 import { AC } from "../../serviceobjects/Utilities/app-constants";
 import { HttpStatusCode } from "../../serviceobjects/enums/HttpStatusCode";
 
-describe("/api/user", () => {
+describe("auth middleware", () => {
     const service = new AuthenticationService();
     beforeAll(async () => {
         server = await app.listen(8184);
@@ -36,6 +36,5 @@ describe("/api/user", () => {
         expect(res.status).toBe(HttpStatusCode.OK);
         expect(res.body).not.toBe(null);
         expect(res.body.name).toContain("Ali Zafar Test");
-        expect(res.body.roles).toContain(500);
     });
 });

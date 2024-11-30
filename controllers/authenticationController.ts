@@ -1,19 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { IResponse } from "../serviceobjects/Interfaces/IResponse";
 import { AuthenticationService } from "../serviceobjects/authenticationService";
-
-export interface IAuthenticationResponse extends IResponse {
-    accessToken?: string;
-    refreshToken?: String;
-    expiresIn?: String;
-}
+import { IAuthenticationResponse } from "../core-sdk/contracts/auhentication/AuthenticationResponse";
+const service = new AuthenticationService();
 
 export async function register(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-    const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.registerUser(
         req.body
     );
@@ -24,9 +18,8 @@ export async function register(
 }
 
 export async function signin(req: Request, res: Response, next: NextFunction) {
-    const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.signIn(
-        req.body
+        req.body.params
     );
     res.status(authentication.statusCode)
         .header("x-auth-token", authentication.accessToken ?? "")
@@ -34,7 +27,6 @@ export async function signin(req: Request, res: Response, next: NextFunction) {
 }
 // This is comments
 export async function token(req: Request, res: Response, next: NextFunction) {
-    const service = new AuthenticationService();
     const authentication: IAuthenticationResponse = await service.refreshToken(
         req.body.user
     );

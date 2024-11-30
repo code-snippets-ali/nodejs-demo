@@ -1,23 +1,18 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { IClinic } from "./Models/IClinic";
 
-const doctorSchema = require("./doctor");
-const clinicSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
+const clinicSchema = new Schema<IClinic>({
+    name: { type: String, required: true },
     phone: String,
     email: String,
-    gps: String,
-    houseNumber: String,
     streetNumber: String,
     streetName: String,
     city: String,
     state: String,
     country: String,
-    doctors: [doctorSchema],
+    isActive: { type: Boolean, default: false },
 });
 
-const Clinic = mongoose.model("Clinic", doctorSchema);
+const Clinic = mongoose.model("Clinic", clinicSchema);
 module.exports.Clinic = Clinic;
 module.exports.clinicSchema = clinicSchema;
