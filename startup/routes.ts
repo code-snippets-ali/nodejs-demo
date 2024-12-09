@@ -2,6 +2,9 @@ import express from "express";
 const app = express();
 
 // SECTION: Middleware
+app.use(require("helmet")());
+app.use(require("express-mongo-sanitize")()); // Protect against NoSQL query injection
+app.use(require("xss-clean")()); // Protect against XSS attacks. Malicious html or js code
 app.use(require("cors")());
 app.use(express.json());
 app.use(express.static("public"));

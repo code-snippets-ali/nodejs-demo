@@ -4,19 +4,21 @@ import Messages from "./Utilities/Messages";
 import { HttpStatusCode } from "./enums/HttpStatusCode";
 import { UserRepository } from "../repoitory/UserRepository";
 import { IUserModel } from "../database/Models/IUserModel";
-import { IResponse } from "../core-sdk/contracts/IResponse";
 import { APIError } from "../core-sdk/APIError";
 import { IUserResponse } from "../core-sdk/contracts/user/UserResponse";
 import { IUserPatchRequest } from "../core-sdk/contracts/user/UserPatchRequest";
 import { IUserPutRequest } from "../core-sdk/contracts/user/UserPutRequest";
+import { ISignedInUserClient } from "./interfaces/ISignedInUserClient";
 
 export class UserService {
     repository = new UserRepository();
     constructor() {}
 
     //#region methods to return user and update user profile
-    async me(id: string): Promise<IUserResponse> {
-        const user: IUserModel | null = await this.repository.getById(id);
+    async me(signedInUser: ISignedInUserClient): Promise<IUserResponse> {
+        const user: IUserModel | null = await this.repository.getById(
+            signedInUser._id
+        );
 
         if (!user) {
             throw new APIError(
@@ -39,9 +41,9 @@ export class UserService {
 
     async updateProfile(
         userPutRequest: IUserPutRequest | IUserPatchRequest,
-        id: string
+        signedInUser: ISignedInUserClient
     ): Promise<IUserResponse> {
-        const profile = await this.repository.getById(id);
+        const profile = await this.repository.getById(signedInUser._id);
         if (!profile) {
             throw new APIError(
                 "User Profile Does Not Exist",
@@ -50,9 +52,8 @@ export class UserService {
                 "There is no profile for this user."
             );
         }
-        console.log(userPutRequest);
-        await this.repository.update(id, userPutRequest);
-        const user = await this.me(id);
+        await this.repository.update(signedInUser._id, userPutRequest);
+        const user = await this.me(signedInUser);
         return user;
     }
     //#endregion
@@ -88,18 +89,5 @@ export class UserService {
 
     async hasPasswordChangedAfter(time: number): Promise<boolean> {
         return false;
-    }
-    validateProfileUpdate(req: IUserResponse): any {
-        const schema = Joi.object({
-            name: Joi.string()
-                .min(1)
-                .max(500)
-                .optional()
-                .messages(Messages.nameValidationMessages()),
-            streetName: Joi.string().optional(),
-
-            user: Joi.object().optional(),
-        });
-        return schema.validate(req);
     }
 }
