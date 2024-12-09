@@ -3,13 +3,18 @@ import { appConfig, Settings } from "../serviceobjects/Utilities/Settings";
 import { HttpStatusCode } from "../serviceobjects/enums/HttpStatusCode";
 import { APIError } from "../core-sdk/APIError";
 import { Role } from "../serviceobjects/enums/Role";
-import { UserService } from "../serviceobjects/userService";
+import { UserService } from "../serviceobjects/userServices";
 import { Common } from "../serviceobjects/Utilities/Common";
 import { AuthenticationService } from "../serviceobjects/authenticationService";
+import {
+    IRefreshUserClient,
+    ISignedInUserClient,
+} from "../serviceobjects/interfaces/ISignedInUserClient";
+import { IRefreshTokenRequest } from "../core-sdk/contracts/auhentication/RefreshTokenRequest";
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 
-export async function auth(req: Request, res: Response, next: Function) {
+export async function auth(req: Request, res: Response, next: NextFunction) {
     //#region 1. Check If user has provided token
     let token;
     if (
@@ -40,7 +45,12 @@ export async function auth(req: Request, res: Response, next: Function) {
             decoded.iat
         );
         //#endregion
-        req.body.user = decoded;
+        const signedInUser: ISignedInUserClient = {
+            _id: decoded._id,
+            access_levels: decoded.access_levels,
+            iat: decoded.iat,
+        };
+        req.body.signedInUser = signedInUser;
         next();
     } catch (ex: any) {
         //#region Errors if something has gone wrong
@@ -108,24 +118,18 @@ function requiredHigherAccessThan(accessLevel: Role) {
 }
 
 async function refresh(req: Request, res: Response, next: Function) {
-    const refreshToken = req.body.refreshToken;
-    if (!refreshToken) {
-        const apiError = new APIError(
-            "Refresh Token Not Provided",
-            HttpStatusCode.BAD_REQUEST,
-            "",
-            "Access denied. Please provide the refresh token to proceed"
-        );
-        next(apiError);
-        return;
-    }
+    const params: IRefreshTokenRequest = req.body.params;
 
     try {
         const decoded = jwt.verify(
-            refreshToken,
+            params.refreshToken,
             appConfig(Settings.JWTPrivateKey)
         );
-        req.body.user = decoded;
+        const refreshUser: IRefreshUserClient = {
+            _id: decoded._id,
+            iat: decoded.iat,
+        };
+        req.body.refreshUser = refreshUser;
         await new UserService().isActiveUserWithSamePassword(
             decoded._id,
             decoded.iat

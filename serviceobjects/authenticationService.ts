@@ -13,6 +13,11 @@ import { IUserModel } from "../database/Models/IUserModel";
 import { IRegisterRequest } from "../core-sdk/contracts/auhentication/RegisterRequest";
 import { ISignInRequest } from "../core-sdk/contracts/auhentication/SigninRequest";
 import { IAuthenticationResponse } from "../core-sdk/contracts/auhentication/AuthenticationResponse";
+import { create } from "../database/diagnosis";
+import { IForgotPasswordRequest } from "../core-sdk/contracts/auhentication/ForgotPasswordRequest";
+import { IResetPasswordRequest } from "../core-sdk/contracts/auhentication/ResetPasswordRequest";
+import { IUpdatePasswordRequest } from "../core-sdk/contracts/auhentication/UpdatePasswordRequest";
+import { IRefreshUserClient } from "./interfaces/ISignedInUserClient";
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
@@ -52,10 +57,7 @@ export class AuthenticationService {
                 "User already exist. Please sign in"
             );
         }
-
-        const salt = await bcrypt.genSalt(12);
-        const hash = await bcrypt.hash(params.password, salt);
-
+        const hash = await this.hashPassword(params.password);
         const user = await this.repository.createAuthenticationForUser(
             params.email,
             hash,
@@ -109,10 +111,11 @@ export class AuthenticationService {
     }
 
     async refreshToken(
-        params: IRefreshTokenRequest
+        params: IRefreshTokenRequest,
+        refreshUser: IRefreshUserClient
     ): Promise<IAuthenticationResponse> {
         const user: IUserModel | null = await this.userRepository.getById(
-            params._id
+            refreshUser._id
         );
 
         if (!user) {
@@ -133,18 +136,11 @@ export class AuthenticationService {
         return response;
     }
 
-    async forgotPassword(email: string, resetURL: string): Promise<IResponse> {
-        if (!email) {
-            throw new APIError(
-                "Email not provided",
-                HttpStatusCode.BAD_REQUEST,
-                "",
-                "Please provide email address to continue",
-                true
-            );
-        }
-        const authenticated = await this.repository.findByEmail(email);
-
+    async forgotPassword(
+        params: IForgotPasswordRequest,
+        resetURL: string
+    ): Promise<IResponse> {
+        const authenticated = await this.repository.findByEmail(params.email);
         if (!authenticated) {
             throw new APIError(
                 "Email Does not exist",
@@ -179,6 +175,7 @@ export class AuthenticationService {
                 true
             );
         }
+        console.log("Email sent to your email address with token: ", token[0]);
         const response: IResponse = {
             success: true,
             message: "Email sent to your email address",
@@ -186,9 +183,103 @@ export class AuthenticationService {
         };
         return response;
     }
+
+    async resetPassword(
+        params: IResetPasswordRequest
+    ): Promise<IAuthenticationResponse> {
+        const hashedToken = this.createTokenHash(params.token);
+        const authenticated = await this.repository.findByToken(hashedToken);
+
+        if (!authenticated) {
+            throw new APIError(
+                "Invalid Token",
+                HttpStatusCode.BAD_REQUEST,
+                "",
+                "The token is invalid or has expired",
+                true
+            );
+        }
+        const hash = await this.hashPassword(params.changedPassword);
+
+        authenticated.password = hash;
+        authenticated.passwordResetToken = undefined;
+        authenticated.passwordResetExpires = undefined;
+        authenticated.passwordChangedAt = new Date();
+        await authenticated.save();
+
+        const user: IUserModel | null = await this.userRepository.getById(
+            authenticated.user._id
+        );
+
+        if (!user) {
+            throw new APIError(
+                "User not found",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "The user associated with this token does not exist",
+                true
+            );
+        }
+
+        const response: IAuthenticationResponse = {
+            accessToken: this.generateToken(user.id!, user.roles),
+            refreshToken: this.generateRefreshToken(user.id!),
+            expiresIn: expires_accessToken,
+            success: true,
+            statusCode: HttpStatusCode.OK,
+        };
+        return response;
+    }
+
+    async updatePassword(
+        params: IUpdatePasswordRequest,
+        user: any
+    ): Promise<IResponse> {
+        const userModel = await this.userRepository.getById(user._id);
+        const authenticated = await this.repository.findByEmail(
+            userModel!.email
+        );
+        if (!authenticated) {
+            throw new APIError(
+                "User not found",
+                HttpStatusCode.NOT_FOUND,
+                "",
+                "The user associated with this token does not have any credentials in our system",
+                true
+            );
+        }
+
+        const isValidPassword = await bcrypt.compare(
+            params.currentPassword,
+            authenticated!.password
+        );
+        if (!isValidPassword) {
+            throw new APIError(
+                "Password is incorrect",
+                HttpStatusCode.UNAUTHORIZED,
+                "",
+                "The password is incorrect",
+                true
+            );
+        }
+        const hash = await this.hashPassword(params.newPassword);
+        authenticated!.password = hash;
+        authenticated.passwordChangedAt = new Date();
+        await authenticated.save();
+
+        const response: IResponse = {
+            success: true,
+            message: "Password updated successfully",
+            statusCode: HttpStatusCode.OK,
+        };
+        return response;
+    }
     //#endregion
     //#region Generate Access and Refresh token and also verify token
-
+    async hashPassword(password: string): Promise<string> {
+        const salt = await bcrypt.genSalt(12);
+        return await bcrypt.hash(password, salt);
+    }
     generateToken(userId: string, roles: [number]): string {
         const token = jwt.sign(
             { _id: userId, access_level: roles },
@@ -211,10 +302,7 @@ export class AuthenticationService {
     generateForgotPasswordToken(): [string, string] {
         const resetToken = crypto.randomBytes(32).toString("hex");
 
-        const tokenHash = crypto
-            .createHash("sha256")
-            .update(resetToken)
-            .digest("hex");
+        const tokenHash = this.createTokenHash(resetToken);
 
         return [resetToken, tokenHash];
     }
@@ -233,6 +321,10 @@ export class AuthenticationService {
                 "You donot have permission for this action"
             );
         }
+    }
+
+    createTokenHash(token: string): string {
+        return crypto.createHash("sha256").update(token).digest("hex");
     }
     //#endregion
 }

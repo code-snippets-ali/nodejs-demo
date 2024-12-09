@@ -3,6 +3,7 @@ const app = require("../../server");
 let server: any;
 import { AuthenticationService } from "../../serviceobjects/authenticationService";
 import { AC } from "../../serviceobjects/Utilities/app-constants";
+import { HttpStatusCode } from "../../serviceobjects/enums/HttpStatusCode";
 
 describe("/api/user", () => {
     const service = new AuthenticationService();
@@ -23,7 +24,7 @@ describe("/api/user", () => {
                 .get("/api/users/me")
                 .set(`${AC.Authorization}`, `${AC.Bearer} ${token}`)
                 .send();
-            expect(res.status).toBe(200);
+            expect(res.status).toBe(HttpStatusCode.OK);
             expect(res.body).not.toBe(null);
             expect(res.body.name).toContain("Ali Zafar Test");
         });
@@ -34,7 +35,7 @@ describe("/api/user", () => {
                 .patch("/api/users/me")
                 .set(`${AC.Authorization}`, `${AC.Bearer} ${token}`)
                 .send({ name: "Ali Zafar Test" });
-            expect(res.status).toBe(200);
+            expect(res.status).toBe(HttpStatusCode.OK);
             expect(res.body).not.toBe(null);
             expect(res.body.name).toContain("Ali Zafar Test");
         });
@@ -43,7 +44,7 @@ describe("/api/user", () => {
                 .patch("/api/users/me")
                 .set(`${AC.Authorization}`, `${AC.Bearer} ${token}`)
                 .send();
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(HttpStatusCode.BAD_REQUEST);
         });
     });
     describe("PUT /me", () => {
@@ -56,7 +57,7 @@ describe("/api/user", () => {
                     email: "ali.zaffar+4@gmail.com",
                     isActive: true,
                 });
-            expect(res.status).toBe(200);
+            expect(res.status).toBe(HttpStatusCode.OK);
             expect(res.body).not.toBe(null);
             expect(res.body.name).toContain("Ali Zafar Test");
         });
@@ -65,7 +66,7 @@ describe("/api/user", () => {
                 .put("/api/users/me")
                 .set(`${AC.Authorization}`, `${AC.Bearer} ${token}`)
                 .send({ name: "Ali Zafar Test" });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(HttpStatusCode.BAD_REQUEST);
         });
     });
 });

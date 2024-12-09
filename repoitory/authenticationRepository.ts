@@ -27,6 +27,7 @@ export class AuthenticationRepository extends BaseRepository<IAuthenticateModel>
             email,
             password,
             name,
+            passwordChangedAt: new Date(),
         });
 
         const user = new User({
@@ -37,5 +38,13 @@ export class AuthenticationRepository extends BaseRepository<IAuthenticateModel>
         await authentication.save();
         await user.save();
         return user;
+    }
+
+    async findByToken(token: string): Promise<IAuthenticateModel | null> {
+        const model: IAuthenticateModel = Authenticate.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() },
+        });
+        return model;
     }
 }
